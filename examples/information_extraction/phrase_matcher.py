@@ -61,10 +61,13 @@ def main(patterns_loc, text_loc, n=10000, lang="en"):
     nlp = spacy.blank(lang)
     nlp.vocab.lex_attr_getters = {}
     phrases = read_gazetteer(nlp.tokenizer, patterns_loc)
-    count = 0
     t1 = time.time()
-    for ent_id, text in get_matches(nlp.tokenizer, phrases, read_text(text_loc, n=n)):
-        count += 1
+    count = sum(
+        1
+        for ent_id, text in get_matches(
+            nlp.tokenizer, phrases, read_text(text_loc, n=n)
+        )
+    )
     t2 = time.time()
     print("%d docs in %.3f s. %d matches" % (n, (t2 - t1), count))
 
@@ -101,12 +104,4 @@ def get_matches(tokenizer, phrases, texts):
 
 
 if __name__ == "__main__":
-    if False:
-        import cProfile
-        import pstats
-
-        cProfile.runctx("plac.call(main)", globals(), locals(), "Profile.prof")
-        s = pstats.Stats("Profile.prof")
-        s.strip_dirs().sort_stats("time").print_stats()
-    else:
-        plac.call(main)
+    plac.call(main)

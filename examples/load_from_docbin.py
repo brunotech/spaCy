@@ -20,7 +20,7 @@ EXAMPLE_PARSES_PATH = "RC_2015-03-9.spacy"
 
 def main(model="en_core_web_lg", docbin_path=EXAMPLE_PARSES_PATH):
     nlp = spacy.load(model)
-    print("Reading data from {}".format(docbin_path))
+    print(f"Reading data from {docbin_path}")
     with open(docbin_path, "rb") as file_:
         bytes_data = file_.read()
     nr_word = 0

@@ -189,12 +189,12 @@ def main(
     }
 
     if mode == "train":
-        if train_loc == None or dev_loc == None:
+        if train_loc is None or dev_loc is None:
             print("Train mode requires paths to training and development data sets.")
             sys.exit(1)
         train(train_loc, dev_loc, shape, settings)
     elif mode == "evaluate":
-        if dev_loc == None:
+        if dev_loc is None:
             print("Evaluate mode requires paths to test data set.")
             sys.exit(1)
         correct, total = evaluate(dev_loc, shape)

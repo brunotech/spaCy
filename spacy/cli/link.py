@@ -27,7 +27,7 @@ def link(origin, link_name, force=False, model_path=None):
     if not model_path.exists():
         msg.fail(
             "Can't locate model data",
-            "The data should be located in {}".format(path2str(model_path)),
+            f"The data should be located in {path2str(model_path)}",
             exits=1,
         )
     data_path = util.get_data_path()
@@ -43,7 +43,7 @@ def link(origin, link_name, force=False, model_path=None):
     link_path = util.get_data_path() / link_name
     if link_path.is_symlink() and not force:
         msg.fail(
-            "Link '{}' already exists".format(link_name),
+            f"Link '{link_name}' already exists",
             "To overwrite an existing link, use the --force flag",
             exits=1,
         )
@@ -54,18 +54,18 @@ def link(origin, link_name, force=False, model_path=None):
     elif link_path.exists():  # does it exist otherwise?
         # NB: Check this last because valid symlinks also "exist".
         msg.fail(
-            "Can't overwrite symlink '{}'".format(link_name),
+            f"Can't overwrite symlink '{link_name}'",
             "This can happen if your data directory contains a directory or "
             "file of the same name.",
             exits=1,
         )
-    details = "%s --> %s" % (path2str(model_path), path2str(link_path))
+    details = f"{path2str(model_path)} --> {path2str(link_path)}"
     try:
         symlink_to(link_path, model_path)
     except:  # noqa: E722
         # This is quite dirty, but just making sure other errors are caught.
         msg.fail(
-            "Couldn't link model to '{}'".format(link_name),
+            f"Couldn't link model to '{link_name}'",
             "Creating a symlink in spacy/data failed. Make sure you have the "
             "required permissions and try re-running the command as admin, or "
             "use a virtualenv. You can still import the model as a module and "
@@ -74,4 +74,4 @@ def link(origin, link_name, force=False, model_path=None):
         msg.text(details)
         raise
     msg.good("Linking successful", details)
-    msg.text("You can now load the model via spacy.load('{}')".format(link_name))
+    msg.text(f"You can now load the model via spacy.load('{link_name}')")

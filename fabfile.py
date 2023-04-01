@@ -82,9 +82,7 @@ def pex():
     with virtualenv(VENV_DIR) as venv_local:
         with lcd(path.dirname(__file__)):
             sha = local("git rev-parse --short HEAD", capture=True)
-            venv_local(
-                "pex dist/*.whl -e spacy -o dist/spacy-%s.pex" % sha, direct=True
-            )
+            venv_local(f"pex dist/*.whl -e spacy -o dist/spacy-{sha}.pex", direct=True)
 
 
 def clean():
@@ -108,16 +106,13 @@ def train():
 
 
 def conll17(treebank_dir, experiment_dir, vectors_dir, config, corpus=""):
-    is_not_clean = local("git status --porcelain", capture=True)
-    if is_not_clean:
+    if is_not_clean := local("git status --porcelain", capture=True):
         print("Repository is not clean")
         print(is_not_clean)
         sys.exit(1)
     git_sha = local("git rev-parse --short HEAD", capture=True)
     config_checksum = local("sha256sum {config}".format(config=config), capture=True)
-    experiment_dir = Path(experiment_dir) / "{}--{}".format(
-        config_checksum[:6], git_sha
-    )
+    experiment_dir = Path(experiment_dir) / f"{config_checksum[:6]}--{git_sha}"
     if not experiment_dir.exists():
         experiment_dir.mkdir()
     test_data_dir = Path(treebank_dir) / "ud-test-v2.0-conll2017"

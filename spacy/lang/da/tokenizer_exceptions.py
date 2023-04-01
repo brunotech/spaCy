@@ -4,59 +4,55 @@ Tokenizer Exceptions.
 Source: https://forkortelse.dk/ and various others.
 """
 
+
 from __future__ import unicode_literals
 
 from ...symbols import ORTH, LEMMA, NORM
 
 
-_exc = {}
-
-# Abbreviations for weekdays "søn." (for "søndag") as well as "Tor." and "Tors."
-# (for "torsdag") are left out because they are ambiguous. The same is the case
-# for abbreviations "jul." and "Jul." ("juli").
-for exc_data in [
-    {ORTH: "Kbh.", LEMMA: "København", NORM: "København"},
-    {ORTH: "jan.", LEMMA: "januar"},
-    {ORTH: "febr.", LEMMA: "februar"},
-    {ORTH: "feb.", LEMMA: "februar"},
-    {ORTH: "mar.", LEMMA: "marts"},
-    {ORTH: "apr.", LEMMA: "april"},
-    {ORTH: "jun.", LEMMA: "juni"},
-    {ORTH: "aug.", LEMMA: "august"},
-    {ORTH: "sept.", LEMMA: "september"},
-    {ORTH: "sep.", LEMMA: "september"},
-    {ORTH: "okt.", LEMMA: "oktober"},
-    {ORTH: "nov.", LEMMA: "november"},
-    {ORTH: "dec.", LEMMA: "december"},
-    {ORTH: "man.", LEMMA: "mandag"},
-    {ORTH: "tirs.", LEMMA: "tirsdag"},
-    {ORTH: "ons.", LEMMA: "onsdag"},
-    {ORTH: "tor.", LEMMA: "torsdag"},
-    {ORTH: "tors.", LEMMA: "torsdag"},
-    {ORTH: "fre.", LEMMA: "fredag"},
-    {ORTH: "lør.", LEMMA: "lørdag"},
-    {ORTH: "Jan.", LEMMA: "januar"},
-    {ORTH: "Febr.", LEMMA: "februar"},
-    {ORTH: "Feb.", LEMMA: "februar"},
-    {ORTH: "Mar.", LEMMA: "marts"},
-    {ORTH: "Apr.", LEMMA: "april"},
-    {ORTH: "Jun.", LEMMA: "juni"},
-    {ORTH: "Aug.", LEMMA: "august"},
-    {ORTH: "Sept.", LEMMA: "september"},
-    {ORTH: "Sep.", LEMMA: "september"},
-    {ORTH: "Okt.", LEMMA: "oktober"},
-    {ORTH: "Nov.", LEMMA: "november"},
-    {ORTH: "Dec.", LEMMA: "december"},
-    {ORTH: "Man.", LEMMA: "mandag"},
-    {ORTH: "Tirs.", LEMMA: "tirsdag"},
-    {ORTH: "Ons.", LEMMA: "onsdag"},
-    {ORTH: "Fre.", LEMMA: "fredag"},
-    {ORTH: "Lør.", LEMMA: "lørdag"},
-    {ORTH: "og/eller", LEMMA: "og/eller", NORM: "og/eller"},
-]:
-    _exc[exc_data[ORTH]] = [exc_data]
-
-
+_exc = {
+    exc_data[ORTH]: [exc_data]
+    for exc_data in [
+        {ORTH: "Kbh.", LEMMA: "København", NORM: "København"},
+        {ORTH: "jan.", LEMMA: "januar"},
+        {ORTH: "febr.", LEMMA: "februar"},
+        {ORTH: "feb.", LEMMA: "februar"},
+        {ORTH: "mar.", LEMMA: "marts"},
+        {ORTH: "apr.", LEMMA: "april"},
+        {ORTH: "jun.", LEMMA: "juni"},
+        {ORTH: "aug.", LEMMA: "august"},
+        {ORTH: "sept.", LEMMA: "september"},
+        {ORTH: "sep.", LEMMA: "september"},
+        {ORTH: "okt.", LEMMA: "oktober"},
+        {ORTH: "nov.", LEMMA: "november"},
+        {ORTH: "dec.", LEMMA: "december"},
+        {ORTH: "man.", LEMMA: "mandag"},
+        {ORTH: "tirs.", LEMMA: "tirsdag"},
+        {ORTH: "ons.", LEMMA: "onsdag"},
+        {ORTH: "tor.", LEMMA: "torsdag"},
+        {ORTH: "tors.", LEMMA: "torsdag"},
+        {ORTH: "fre.", LEMMA: "fredag"},
+        {ORTH: "lør.", LEMMA: "lørdag"},
+        {ORTH: "Jan.", LEMMA: "januar"},
+        {ORTH: "Febr.", LEMMA: "februar"},
+        {ORTH: "Feb.", LEMMA: "februar"},
+        {ORTH: "Mar.", LEMMA: "marts"},
+        {ORTH: "Apr.", LEMMA: "april"},
+        {ORTH: "Jun.", LEMMA: "juni"},
+        {ORTH: "Aug.", LEMMA: "august"},
+        {ORTH: "Sept.", LEMMA: "september"},
+        {ORTH: "Sep.", LEMMA: "september"},
+        {ORTH: "Okt.", LEMMA: "oktober"},
+        {ORTH: "Nov.", LEMMA: "november"},
+        {ORTH: "Dec.", LEMMA: "december"},
+        {ORTH: "Man.", LEMMA: "mandag"},
+        {ORTH: "Tirs.", LEMMA: "tirsdag"},
+        {ORTH: "Ons.", LEMMA: "onsdag"},
+        {ORTH: "Fre.", LEMMA: "fredag"},
+        {ORTH: "Lør.", LEMMA: "lørdag"},
+        {ORTH: "og/eller", LEMMA: "og/eller", NORM: "og/eller"},
+    ]
+}
 # Specified case only
 for orth in [
     "diam.",
@@ -578,6 +574,6 @@ for h in range(1, 31 + 1):
         _exc["%d%s" % (h, period)] = [{ORTH: "%d." % h}]
 
 _custom_base_exc = {"i.": [{ORTH: "i", LEMMA: "i", NORM: "i"}, {ORTH: "."}]}
-_exc.update(_custom_base_exc)
+_exc |= _custom_base_exc
 
 TOKENIZER_EXCEPTIONS = _exc

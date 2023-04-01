@@ -115,7 +115,7 @@ def init_model(
     lex_added = len(nlp.vocab)
     msg.good(
         "Sucessfully compiled vocab",
-        "{} entries, {} vectors".format(lex_added, vec_added),
+        f"{lex_added} entries, {vec_added} vectors",
     )
     if not output_dir.exists():
         output_dir.mkdir()
@@ -156,13 +156,14 @@ def read_attrs_from_deprecated(freqs_loc, clusters_loc):
     sorted_probs = sorted(probs.items(), key=lambda item: item[1], reverse=True)
     if len(sorted_probs):
         for i, (word, prob) in tqdm(enumerate(sorted_probs)):
-            attrs = {"orth": word, "id": i, "prob": prob}
-            # Decode as a little-endian string, so that we can do & 15 to get
-            # the first 4 bits. See _parse_features.pyx
-            if word in clusters:
-                attrs["cluster"] = int(clusters[word][::-1], 2)
-            else:
-                attrs["cluster"] = 0
+            attrs = {
+                "orth": word,
+                "id": i,
+                "prob": prob,
+                "cluster": int(clusters[word][::-1], 2)
+                if word in clusters
+                else 0,
+            }
             lex_attrs.append(attrs)
     return lex_attrs
 
@@ -203,9 +204,9 @@ def add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, name=None):
                 nlp.vocab.vectors.add(lex.orth, row=lex.rank)
     else:
         if vectors_loc:
-            with msg.loading("Reading vectors from {}".format(vectors_loc)):
+            with msg.loading(f"Reading vectors from {vectors_loc}"):
                 vectors_data, vector_keys = read_vectors(vectors_loc, truncate_vectors)
-            msg.good("Loaded vectors from {}".format(vectors_loc))
+            msg.good(f"Loaded vectors from {vectors_loc}")
         else:
             vectors_data, vector_keys = (None, None)
         if vector_keys is not None:
@@ -215,7 +216,7 @@ def add_vectors(nlp, vectors_loc, truncate_vectors, prune_vectors, name=None):
         if vectors_data is not None:
             nlp.vocab.vectors = Vectors(data=vectors_data, keys=vector_keys)
     if name is None:
-        nlp.vocab.vectors.name = "%s_model.vectors" % nlp.meta["lang"]
+        nlp.vocab.vectors.name = f'{nlp.meta["lang"]}_model.vectors'
     else:
         nlp.vocab.vectors.name = name
     nlp.meta["vectors"]["name"] = nlp.vocab.vectors.name
@@ -265,8 +266,8 @@ def read_freqs(freqs_loc, max_length=100, min_doc_freq=5, min_freq=50):
                     word = literal_eval(key)
                 except SyntaxError:
                     # Take odd strings literally.
-                    word = literal_eval("'%s'" % key)
-                smooth_count = counts.smoother(int(freq))
+                    word = literal_eval(f"'{key}'")
+                smooth_count = counts.smoother(freq)
                 probs[word] = math.log(smooth_count) - log_total
     oov_prob = math.log(counts.smoother(0)) - log_total
     return probs, oov_prob
@@ -286,10 +287,7 @@ def read_clusters(clusters_loc):
                 continue
             # If the clusterer has only seen the word a few times, its
             # cluster is unreliable.
-            if int(freq) >= 3:
-                clusters[word] = cluster
-            else:
-                clusters[word] = "0"
+            clusters[word] = cluster if int(freq) >= 3 else "0"
     # Expand clusters with re-casing
     for word, cluster in list(clusters.items()):
         if word.lower() not in clusters:

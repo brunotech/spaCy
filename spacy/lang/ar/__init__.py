@@ -13,9 +13,11 @@ from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
 
+
+
 class ArabicDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
+    lex_attr_getters |= LEX_ATTRS
     lex_attr_getters[LANG] = lambda text: "ar"
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
@@ -24,6 +26,7 @@ class ArabicDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     suffixes = TOKENIZER_SUFFIXES
     writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
+
 
 
 class Arabic(Language):

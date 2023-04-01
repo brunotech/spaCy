@@ -25,7 +25,7 @@ class LithuanianDefaults(Language.Defaults):
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
-    lex_attr_getters.update(LEX_ATTRS)
+    lex_attr_getters |= LEX_ATTRS
 
     infixes = TOKENIZER_INFIXES
     suffixes = TOKENIZER_SUFFIXES
@@ -37,6 +37,7 @@ class LithuanianDefaults(Language.Defaults):
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     morph_rules = MORPH_RULES
+
 
 
 class Lithuanian(Language):

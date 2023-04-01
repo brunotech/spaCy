@@ -42,7 +42,7 @@ def load_model(modelname, add_sentencizer=False):
     loading_end = time.time()
     loading_time = loading_end - loading_start
     if add_sentencizer:
-        return nlp, loading_time, modelname + '_sentencizer'
+        return nlp, loading_time, f'{modelname}_sentencizer'
     return nlp, loading_time, modelname
 
 
@@ -54,7 +54,7 @@ def load_default_model_sentencizer(lang):
     nlp.add_pipe(nlp.create_pipe('sentencizer'))
     loading_end = time.time()
     loading_time = loading_end - loading_start
-    return nlp, loading_time, lang + "_default_" + 'sentencizer'
+    return nlp, loading_time, f"{lang}_default_sentencizer"
 
 
 def split_text(text):
@@ -83,8 +83,8 @@ def _contains_blinded_text(stats_xml):
 
 def fetch_all_treebanks(ud_dir, languages, corpus, best_per_language):
     """" Fetch the txt files for all treebanks for a given set of languages """
-    all_treebanks = dict()
-    treebank_size = dict()
+    all_treebanks = {}
+    treebank_size = {}
     for l in languages:
         all_treebanks[l] = []
         treebank_size[l] = 0
@@ -92,7 +92,7 @@ def fetch_all_treebanks(ud_dir, languages, corpus, best_per_language):
     for treebank_dir in ud_dir.iterdir():
         if treebank_dir.is_dir():
             for txt_path in treebank_dir.iterdir():
-                if txt_path.name.endswith('-ud-' + corpus + '.txt'):
+                if txt_path.name.endswith(f'-ud-{corpus}.txt'):
                     file_lang = txt_path.name.split('_')[0]
                     if file_lang in languages:
                         gold_path = treebank_dir / txt_path.name.replace('.txt', '.conllu')
@@ -148,19 +148,42 @@ def run_single_eval(nlp, loading_time, print_name, text_path, gold_ud, tmp_outpu
 
     for score_name in eval_headers:
         score = scores[score_name]
-        print_string_1.extend(["%.2f" % score.precision,
-                               "%.2f" % score.recall,
-                               "%.2f" % score.f1])
-        print_string_1.append("-" if score.aligned_accuracy is None else "%.2f" % score.aligned_accuracy)
-        print_string_1.append("-" if score.undersegmented is None else "%.4f" % score.under_perc)
-        print_string_1.append("-" if score.oversegmented is None else "%.4f" % score.over_perc)
-
-        print_header_1.extend([score_name + '_p', score_name + '_r', score_name + '_F', score_name + '_acc',
-                               score_name + '_under', score_name + '_over'])
+        print_string_1.extend(
+            [
+                "%.2f" % score.precision,
+                "%.2f" % score.recall,
+                "%.2f" % score.f1,
+                "-"
+                if score.aligned_accuracy is None
+                else "%.2f" % score.aligned_accuracy,
+                "-"
+                if score.undersegmented is None
+                else "%.4f" % score.under_perc,
+                "-"
+                if score.oversegmented is None
+                else "%.4f" % score.over_perc,
+            ]
+        )
+        print_header_1.extend(
+            [
+                f'{score_name}_p',
+                f'{score_name}_r',
+                f'{score_name}_F',
+                f'{score_name}_acc',
+                f'{score_name}_under',
+                f'{score_name}_over',
+            ]
+        )
 
         if score_name in print_freq_tasks:
-            print_header_1.extend([score_name + '_word_under_ex', score_name + '_shape_under_ex',
-                                   score_name + '_word_over_ex', score_name + '_shape_over_ex'])
+            print_header_1.extend(
+                [
+                    f'{score_name}_word_under_ex',
+                    f'{score_name}_shape_under_ex',
+                    f'{score_name}_word_over_ex',
+                    f'{score_name}_shape_over_ex',
+                ]
+            )
 
             d_under_words = get_freq_tuples(score.undersegmented, PRINT_TOTAL)
             d_under_shapes = get_freq_tuples([word_shape(x) for x in score.undersegmented], PRINT_TOTAL)
@@ -193,7 +216,7 @@ def run_all_evals(models, treebanks, out_file, check_parse, print_freq_tasks):
         for text_path in treebank_list:
             print(" Evaluating on", text_path)
 
-            gold_path = text_path.parent / (text_path.stem + '.conllu')
+            gold_path = text_path.parent / f'{text_path.stem}.conllu'
             print("  Gold data from ", gold_path)
 
             # nested try blocks to ensure the code can continue with the next iteration after a failure
@@ -204,14 +227,14 @@ def run_all_evals(models, treebanks, out_file, check_parse, print_freq_tasks):
                 for nlp, nlp_loading_time, nlp_name in models[tb_lang]:
                     try:
                         print("   Benchmarking", nlp_name)
-                        tmp_output_path = text_path.parent / str('tmp_' + nlp_name + '.conllu')
+                        tmp_output_path = text_path.parent / str(f'tmp_{nlp_name}.conllu')
                         run_single_eval(nlp, nlp_loading_time, nlp_name, text_path, gold_ud, tmp_output_path, out_file,
                                         print_header, check_parse, print_freq_tasks)
                         print_header = False
                     except Exception as e:
-                        print("    Ran into trouble: ", str(e))
+                        print("    Ran into trouble: ", e)
             except Exception as e:
-                print("   Ran into trouble: ", str(e))
+                print("   Ran into trouble: ", e)
 
 
 @plac.annotations(
@@ -233,16 +256,13 @@ def main(out_path, ud_dir, check_parse=False, langs=ALL_LANGUAGES, exclude_train
     """
     languages = [lang.strip() for lang in langs.split(",")]
 
-    print_freq_tasks = []
-    if not hide_freq:
-        print_freq_tasks = ['Tokens']
-
+    print_freq_tasks = [] if hide_freq else ['Tokens']
     # fetching all relevant treebank from the directory
     treebanks = fetch_all_treebanks(ud_dir, languages, corpus, best_per_language)
 
     print()
     print("Loading all relevant models for", languages)
-    models = dict()
+    models = {}
 
     # multi-lang model
     multi = None

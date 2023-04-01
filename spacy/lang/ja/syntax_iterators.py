@@ -29,7 +29,7 @@ def noun_chunks(obj):
     conj = doc.vocab.strings.add("conj")
     np_label = doc.vocab.strings.add("NP")
     seen = set()
-    for i, word in enumerate(obj):
+    for word in obj:
         if word.pos not in (NOUN, PROPN, PRON):
             continue
         # Prevent nested chunks from being produced

@@ -242,9 +242,7 @@ class Table(OrderedDict):
         """
         key = get_string_id(key)
         # This can give a false positive, so we need to check it after
-        if key not in self.bloom:
-            return False
-        return OrderedDict.__contains__(self, key)
+        return False if key not in self.bloom else OrderedDict.__contains__(self, key)
 
     def to_bytes(self):
         """Serialize table to a bytestring.

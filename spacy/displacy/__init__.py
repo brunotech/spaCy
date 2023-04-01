@@ -45,12 +45,12 @@ def render(
         raise ValueError(Errors.E087.format(style=style))
     if isinstance(docs, (Doc, Span, dict)):
         docs = [docs]
-    docs = [obj if not isinstance(obj, Span) else obj.as_doc() for obj in docs]
+    docs = [obj.as_doc() if isinstance(obj, Span) else obj for obj in docs]
     if not all(isinstance(obj, (Doc, Span, dict)) for obj in docs):
         raise ValueError(Errors.E096)
     renderer, converter = factories[style]
     renderer = renderer(options=options)
-    parsed = [converter(doc, options) for doc in docs] if not manual else docs
+    parsed = docs if manual else [converter(doc, options) for doc in docs]
     _html["parsed"] = renderer.render(parsed, page=page, minify=minify).strip()
     html = _html["parsed"]
     if RENDER_WRAPPER is not None:
@@ -60,7 +60,7 @@ def render(
         # See #4840 for details on span wrapper to disable mathjax
         from IPython.core.display import display, HTML
 
-        return display(HTML('<span class="tex2jax_ignore">{}</span>'.format(html)))
+        return display(HTML(f'<span class="tex2jax_ignore">{html}</span>'))
     return html
 
 
@@ -95,12 +95,12 @@ def serve(
 
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server(host, port, app)
-    print("\nUsing the '{}' visualizer".format(style))
-    print("Serving on http://{}:{} ...\n".format(host, port))
+    print(f"\nUsing the '{style}' visualizer")
+    print(f"Serving on http://{host}:{port} ...\n")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("Shutting down server on port {}.".format(port))
+        print(f"Shutting down server on port {port}.")
     finally:
         httpd.server_close()
 

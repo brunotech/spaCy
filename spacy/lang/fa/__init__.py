@@ -13,9 +13,11 @@ from .punctuation import TOKENIZER_SUFFIXES
 from .syntax_iterators import SYNTAX_ITERATORS
 
 
+
+
 class PersianDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
+    lex_attr_getters |= LEX_ATTRS
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
     )
@@ -26,6 +28,7 @@ class PersianDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     writing_system = {"direction": "rtl", "has_case": False, "has_letters": True}
     syntax_iterators = SYNTAX_ITERATORS
+
 
 
 class Persian(Language):

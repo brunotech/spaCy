@@ -26,7 +26,7 @@ TEXTS = [
 )
 def main(model="en_core_web_sm"):
     nlp = spacy.load(model)
-    print("Loaded model '%s'" % model)
+    print(f"Loaded model '{model}'")
     print("Processing %d texts" % len(TEXTS))
 
     for text in TEXTS:
@@ -48,8 +48,7 @@ def filter_spans(spans):
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
             result.append(span)
         seen_tokens.update(range(span.start, span.end))
-    result = sorted(result, key=lambda span: span.start)
-    return result
+    return sorted(result, key=lambda span: span.start)
 
 
 def extract_currency_relations(doc):
@@ -63,8 +62,7 @@ def extract_currency_relations(doc):
     relations = []
     for money in filter(lambda w: w.ent_type_ == "MONEY", doc):
         if money.dep_ in ("attr", "dobj"):
-            subject = [w for w in money.head.lefts if w.dep_ == "nsubj"]
-            if subject:
+            if subject := [w for w in money.head.lefts if w.dep_ == "nsubj"]:
                 subject = subject[0]
                 relations.append((subject, money))
         elif money.dep_ == "pobj" and money.head.dep_ == "prep":

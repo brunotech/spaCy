@@ -15,9 +15,11 @@ from ...attrs import LANG, NORM
 from ...util import update_exc, add_lookups
 
 
+
+
 class SpanishDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
+    lex_attr_getters |= LEX_ATTRS
     lex_attr_getters[LANG] = lambda text: "es"
     lex_attr_getters[NORM] = add_lookups(
         Language.Defaults.lex_attr_getters[NORM], BASE_NORMS
@@ -28,6 +30,7 @@ class SpanishDefaults(Language.Defaults):
     suffixes = TOKENIZER_SUFFIXES
     stop_words = STOP_WORDS
     syntax_iterators = SYNTAX_ITERATORS
+
 
 
 class Spanish(Language):

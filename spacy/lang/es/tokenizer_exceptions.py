@@ -4,29 +4,25 @@ from __future__ import unicode_literals
 from ...symbols import ORTH, LEMMA, NORM, PRON_LEMMA
 
 
-_exc = {}
-
-
-for exc_data in [
-    {ORTH: "n°", LEMMA: "número"},
-    {ORTH: "°C", LEMMA: "grados Celcius"},
-    {ORTH: "aprox.", LEMMA: "aproximadamente"},
-    {ORTH: "dna.", LEMMA: "docena"},
-    {ORTH: "dpto.", LEMMA: "departamento"},
-    {ORTH: "ej.", LEMMA: "ejemplo"},
-    {ORTH: "esq.", LEMMA: "esquina"},
-    {ORTH: "pág.", LEMMA: "página"},
-    {ORTH: "p.ej.", LEMMA: "por ejemplo"},
-    {ORTH: "Ud.", LEMMA: PRON_LEMMA, NORM: "usted"},
-    {ORTH: "Vd.", LEMMA: PRON_LEMMA, NORM: "usted"},
-    {ORTH: "Uds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
-    {ORTH: "Vds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
-    {ORTH: "vol.", NORM: "volúmen"},
-
-]:
-    _exc[exc_data[ORTH]] = [exc_data]
-
-
+_exc = {
+    exc_data[ORTH]: [exc_data]
+    for exc_data in [
+        {ORTH: "n°", LEMMA: "número"},
+        {ORTH: "°C", LEMMA: "grados Celcius"},
+        {ORTH: "aprox.", LEMMA: "aproximadamente"},
+        {ORTH: "dna.", LEMMA: "docena"},
+        {ORTH: "dpto.", LEMMA: "departamento"},
+        {ORTH: "ej.", LEMMA: "ejemplo"},
+        {ORTH: "esq.", LEMMA: "esquina"},
+        {ORTH: "pág.", LEMMA: "página"},
+        {ORTH: "p.ej.", LEMMA: "por ejemplo"},
+        {ORTH: "Ud.", LEMMA: PRON_LEMMA, NORM: "usted"},
+        {ORTH: "Vd.", LEMMA: PRON_LEMMA, NORM: "usted"},
+        {ORTH: "Uds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
+        {ORTH: "Vds.", LEMMA: PRON_LEMMA, NORM: "ustedes"},
+        {ORTH: "vol.", NORM: "volúmen"},
+    ]
+}
 # Times
 
 _exc["12m."] = [{ORTH: "12"}, {ORTH: "m.", LEMMA: "p.m."}]

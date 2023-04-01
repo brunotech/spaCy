@@ -61,7 +61,7 @@ def main(n_iter=10):
 
     print("Create data", len(TRAIN_DATA))
     optimizer = nlp.begin_training(get_gold_tuples=lambda: TRAIN_DATA)
-    for itn in range(n_iter):
+    for _ in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
         for text, annot_brackets in TRAIN_DATA:

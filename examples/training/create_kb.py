@@ -36,7 +36,7 @@ def main(model=None, output_dir=None):
     The updated vocab will also be written to a directory in the output_dir."""
 
     nlp = spacy.load(model)  # load existing spaCy model
-    print("Loaded model '%s'" % model)
+    print(f"Loaded model '{model}'")
 
     # check the length of the nlp vectors
     if "vectors" not in nlp.meta or not nlp.vocab.vectors.size:

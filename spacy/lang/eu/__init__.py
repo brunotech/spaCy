@@ -10,14 +10,17 @@ from ...language import Language
 from ...attrs import LANG
 
 
+
+
 class BasqueDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters.update(LEX_ATTRS)
+    lex_attr_getters |= LEX_ATTRS
     lex_attr_getters[LANG] = lambda text: "eu"
 
     tokenizer_exceptions = BASE_EXCEPTIONS
     stop_words = STOP_WORDS
     suffixes = TOKENIZER_SUFFIXES
+
 
 
 class Basque(Language):

@@ -45,7 +45,7 @@ def main(model=None, output_dir=None, n_iter=15):
     """Load the model, set up the pipeline and train the parser."""
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
-        print("Loaded model '%s'" % model)
+        print(f"Loaded model '{model}'")
     else:
         nlp = spacy.blank("en")  # create blank Language class
         print("Created blank 'en' model")
@@ -69,7 +69,7 @@ def main(model=None, output_dir=None, n_iter=15):
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     with nlp.disable_pipes(*other_pipes):  # only train parser
         optimizer = nlp.begin_training()
-        for itn in range(n_iter):
+        for _ in range(n_iter):
             random.shuffle(TRAIN_DATA)
             losses = {}
             # batch up the examples using spaCy's minibatch

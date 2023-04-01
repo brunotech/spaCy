@@ -45,8 +45,8 @@ def can_be_sentence_start(token):
     spacy_model=("spaCy model to use (with a parser)", "option", "m", str),
 )
 def main(text="Been here And I'm loving it.", spacy_model="en_core_web_lg"):
-    print("Using spaCy model '{}'".format(spacy_model))
-    print("Processing text '{}'".format(text))
+    print(f"Using spaCy model '{spacy_model}'")
+    print(f"Processing text '{text}'")
     nlp = spacy.load(spacy_model)
     doc = nlp(text)
     sentences = [sent.text.strip() for sent in doc.sents]

@@ -29,17 +29,7 @@ FILE_TYPES = ("json", "jsonl", "msg")
 FILE_TYPES_STDOUT = ("json", "jsonl")
 
 
-@plac.annotations(
-    input_file=("Input file", "positional", None, str),
-    output_dir=("Output directory. '-' for stdout.", "positional", None, str),
-    file_type=("Type of data to produce: {}".format(FILE_TYPES), "option", "t", str),
-    n_sents=("Number of sentences per doc (0 to disable)", "option", "n", int),
-    seg_sents=("Segment sentences (for -c ner)", "flag", "s"),
-    model=("Model for sentence segmentation (for -s)", "option", "b", str),
-    converter=("Converter: {}".format(tuple(CONVERTERS.keys())), "option", "c", str),
-    lang=("Language (if tokenizer required)", "option", "l", str),
-    morphology=("Enable appending morphology to tags", "flag", "m", bool),
-)
+@plac.annotations(input_file=("Input file", "positional", None, str), output_dir=("Output directory. '-' for stdout.", "positional", None, str), file_type=(f"Type of data to produce: {FILE_TYPES}", "option", "t", str), n_sents=("Number of sentences per doc (0 to disable)", "option", "n", int), seg_sents=("Segment sentences (for -c ner)", "flag", "s"), model=("Model for sentence segmentation (for -s)", "option", "b", str), converter=(f"Converter: {tuple(CONVERTERS.keys())}", "option", "c", str), lang=("Language (if tokenizer required)", "option", "l", str), morphology=("Enable appending morphology to tags", "flag", "m", bool))
 def convert(
     input_file,
     output_dir="-",
@@ -62,14 +52,14 @@ def convert(
     input_path = Path(input_file)
     if file_type not in FILE_TYPES:
         msg.fail(
-            "Unknown file type: '{}'".format(file_type),
-            "Supported file types: '{}'".format(", ".join(FILE_TYPES)),
+            f"Unknown file type: '{file_type}'",
+            f"""Supported file types: '{", ".join(FILE_TYPES)}'""",
             exits=1,
         )
     if file_type not in FILE_TYPES_STDOUT and output_dir == "-":
         # TODO: support msgpack via stdout in srsly?
         msg.fail(
-            "Can't write .{} data to stdout.".format(file_type),
+            f"Can't write .{file_type} data to stdout.",
             "Please specify an output directory.",
             exits=1,
         )
@@ -80,7 +70,7 @@ def convert(
     input_data = input_path.open("r", encoding="utf-8").read()
     if converter == "auto":
         converter = input_path.suffix[1:]
-    if converter == "ner" or converter == "iob":
+    if converter in ["ner", "iob"]:
         converter_autodetect = autodetect_ner_format(input_data)
         if converter_autodetect == "ner":
             msg.info("Auto-detected token-per-line NER format")
@@ -93,7 +83,7 @@ def convert(
                 "Can't automatically detect NER format. Conversion may not succeed. See https://spacy.io/api/cli#convert"
             )
     if converter not in CONVERTERS:
-        msg.fail("Can't find converter for {}".format(converter), exits=1)
+        msg.fail(f"Can't find converter for {converter}", exits=1)
     # Use converter function to convert data
     func = CONVERTERS[converter]
     data = func(
@@ -107,7 +97,7 @@ def convert(
     )
     if output_dir != "-":
         # Export data to a file
-        suffix = ".{}".format(file_type)
+        suffix = f".{file_type}"
         output_file = Path(output_dir) / Path(input_path.parts[-1]).with_suffix(suffix)
         if file_type == "json":
             srsly.write_json(output_file, data)
@@ -115,15 +105,11 @@ def convert(
             srsly.write_jsonl(output_file, data)
         elif file_type == "msg":
             srsly.write_msgpack(output_file, data)
-        msg.good(
-            "Generated output file ({} documents): {}".format(len(data), output_file)
-        )
-    else:
-        # Print to stdout
-        if file_type == "json":
-            srsly.write_json("-", data)
-        elif file_type == "jsonl":
-            srsly.write_jsonl("-", data)
+        msg.good(f"Generated output file ({len(data)} documents): {output_file}")
+    elif file_type == "json":
+        srsly.write_json("-", data)
+    elif file_type == "jsonl":
+        srsly.write_jsonl("-", data)
 
 
 def autodetect_ner_format(input_data):

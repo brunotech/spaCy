@@ -4,25 +4,22 @@ from __future__ import unicode_literals
 from ...symbols import ORTH, LEMMA
 
 
-_exc = {}
-
-
-for exc_data in [
-    {ORTH: "jan.", LEMMA: "januar"},
-    {ORTH: "feb.", LEMMA: "februar"},
-    {ORTH: "mar.", LEMMA: "mars"},
-    {ORTH: "apr.", LEMMA: "april"},
-    {ORTH: "jun.", LEMMA: "juni"},
-    {ORTH: "jul.", LEMMA: "juli"},
-    {ORTH: "aug.", LEMMA: "august"},
-    {ORTH: "sep.", LEMMA: "september"},
-    {ORTH: "okt.", LEMMA: "oktober"},
-    {ORTH: "nov.", LEMMA: "november"},
-    {ORTH: "des.", LEMMA: "desember"},
-]:
-    _exc[exc_data[ORTH]] = [exc_data]
-
-
+_exc = {
+    exc_data[ORTH]: [exc_data]
+    for exc_data in [
+        {ORTH: "jan.", LEMMA: "januar"},
+        {ORTH: "feb.", LEMMA: "februar"},
+        {ORTH: "mar.", LEMMA: "mars"},
+        {ORTH: "apr.", LEMMA: "april"},
+        {ORTH: "jun.", LEMMA: "juni"},
+        {ORTH: "jul.", LEMMA: "juli"},
+        {ORTH: "aug.", LEMMA: "august"},
+        {ORTH: "sep.", LEMMA: "september"},
+        {ORTH: "okt.", LEMMA: "oktober"},
+        {ORTH: "nov.", LEMMA: "november"},
+        {ORTH: "des.", LEMMA: "desember"},
+    ]
+}
 for orth in [
     "Ap.",
     "Aq.",

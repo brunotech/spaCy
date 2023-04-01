@@ -13,15 +13,18 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+
+
 class PortugueseDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: "pt"
-    lex_attr_getters.update(LEX_ATTRS)
+    lex_attr_getters |= LEX_ATTRS
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = STOP_WORDS
     tag_map = TAG_MAP
     infixes = TOKENIZER_INFIXES
     prefixes = TOKENIZER_PREFIXES
+
 
 
 class Portuguese(Language):

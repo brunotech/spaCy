@@ -4,11 +4,10 @@ from __future__ import unicode_literals
 from ...symbols import ORTH, LEMMA, NORM
 
 
-_exc = {}
-
-for token in ["Απ'", "ΑΠ'", "αφ'", "Αφ'"]:
-    _exc[token] = [{ORTH: token, LEMMA: "από", NORM: "από"}]
-
+_exc = {
+    token: [{ORTH: token, LEMMA: "από", NORM: "από"}]
+    for token in ["Απ'", "ΑΠ'", "αφ'", "Αφ'"]
+}
 for token in ["Αλλ'", "αλλ'"]:
     _exc[token] = [{ORTH: token, LEMMA: "αλλά", NORM: "αλλά"}]
 
@@ -129,7 +128,7 @@ _other_exc = {
     "'βγαινε": [{ORTH: "'βγαινε", LEMMA: "βγαίνω", NORM: "βγαίνω"}],
 }
 
-_exc.update(_other_exc)
+_exc |= _other_exc
 
 for h in range(1, 12 + 1):
 

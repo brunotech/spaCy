@@ -35,10 +35,7 @@ def try_sudachi_import(split_mode="A"):
             "B": tokenizer.Tokenizer.SplitMode.B,
             "C": tokenizer.Tokenizer.SplitMode.C,
         }[split_mode]
-        tok = dictionary.Dictionary().create(
-            mode=split_mode
-        )
-        return tok
+        return dictionary.Dictionary().create(mode=split_mode)
     except ImportError:
         raise ImportError(
             "Japanese support requires SudachiPy and SudachiDict-core "
@@ -89,9 +86,9 @@ def get_dtokens_and_spaces(dtokens, text, gap_tag="空白"):
     text_spaces = []
     text_pos = 0
     # handle empty and whitespace-only texts
-    if len(words) == 0:
+    if not words:
         return text_dtokens, text_spaces
-    elif len([word for word in words if not word.isspace()]) == 0:
+    elif not [word for word in words if not word.isspace()]:
         assert text.isspace()
         text_dtokens = [DetailedToken(text, gap_tag, '', text, None, None)]
         text_spaces = [False]
@@ -161,7 +158,7 @@ class JapaneseTokenizer(DummyTokenizer):
                     tags[idx + 1] if idx + 1 < len(tags) else None
                 )
             # if there's no lemma info (it's an unk) just use the surface
-            token.lemma_ = dtoken.lemma if dtoken.lemma else dtoken.surface
+            token.lemma_ = dtoken.lemma or dtoken.surface
 
         doc.user_data["inflections"] = inflections
         doc.user_data["reading_forms"] = readings
@@ -213,12 +210,7 @@ class JapaneseTokenizer(DummyTokenizer):
         return sub_tokens_list
 
     def _get_config(self):
-        config = OrderedDict(
-            (
-                ("split_mode", self.split_mode),
-            )
-        )
-        return config
+        return OrderedDict((("split_mode", self.split_mode),))
 
     def _set_config(self, config={}):
         self.split_mode = config.get("split_mode", None)

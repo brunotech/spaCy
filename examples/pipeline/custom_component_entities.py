@@ -100,7 +100,7 @@ class TechCompanyRecognizer(object):
         is a tech org. Since the getter is only called when we access the
         attribute, we can refer to the Token's 'is_tech_org' attribute here,
         which is already set in the processing step."""
-        return any([t._.get("is_tech_org") for t in tokens])
+        return any(t._.get("is_tech_org") for t in tokens)
 
 
 if __name__ == "__main__":

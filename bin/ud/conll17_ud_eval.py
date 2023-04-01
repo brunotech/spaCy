@@ -100,6 +100,7 @@ class UDError(Exception):
 # Load given CoNLL-U file into internal representation
 def load_conllu(file, check_parse=True):
     # Internal representation classes
+
     class UDRepresentation:
         def __init__(self):
             # Characters of all the tokens in the whole file.
@@ -182,9 +183,18 @@ def load_conllu(file, check_parse=True):
                 process_word(word)
 
             # Check there is a single root node
-            if check_parse:
-                if len([word for word in ud.words[sentence_start:] if word.parent is None]) != 1:
-                    raise UDError("There are multiple roots in a sentence")
+            if (
+                check_parse
+                and len(
+                    [
+                        word
+                        for word in ud.words[sentence_start:]
+                        if word.parent is None
+                    ]
+                )
+                != 1
+            ):
+                raise UDError("There are multiple roots in a sentence")
 
             # End the sentence
             ud.sentences[-1].end = index
@@ -500,7 +510,9 @@ def load_deprel_weights(weights_file):
 
         columns = line.rstrip("\r\n").split()
         if len(columns) != 2:
-            raise ValueError("Expected two columns in the UD Relations weights file on line '{}'".format(line))
+            raise ValueError(
+                f"Expected two columns in the UD Relations weights file on line '{line}'"
+            )
 
         deprel_weights[columns[0]] = float(columns[1])
 
@@ -573,12 +585,16 @@ class TestAlignment(unittest.TestCase):
             parts = w.split(" ")
             if len(parts) == 1:
                 num_words += 1
-                lines.append("{}\t{}\t_\t_\t_\t_\t{}\t_\t_\t_".format(num_words, parts[0], int(num_words>1)))
+                lines.append(
+                    f"{num_words}\t{parts[0]}\t_\t_\t_\t_\t{int(num_words > 1)}\t_\t_\t_"
+                )
             else:
-                lines.append("{}-{}\t{}\t_\t_\t_\t_\t_\t_\t_\t_".format(num_words + 1, num_words + len(parts) - 1, parts[0]))
+                lines.append(
+                    f"{num_words + 1}-{num_words + len(parts) - 1}\t{parts[0]}\t_\t_\t_\t_\t_\t_\t_\t_"
+                )
                 for part in parts[1:]:
                     num_words += 1
-                    lines.append("{}\t{}\t_\t_\t_\t_\t{}\t_\t_\t_".format(num_words, part, int(num_words>1)))
+                    lines.append(f"{num_words}\t{part}\t_\t_\t_\t_\t{int(num_words > 1)}\t_\t_\t_")
         return load_conllu((io.StringIO if sys.version_info >= (3, 0) else io.BytesIO)("\n".join(lines+["\n"])))
 
     def _test_exception(self, gold, system):

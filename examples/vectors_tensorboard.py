@@ -36,12 +36,12 @@ from tensorflow.contrib.tensorboard.plugins.projector import (
     ),
 )
 def main(vectors_loc, out_loc, name="spaCy_vectors"):
-    meta_file = "{}.tsv".format(name)
+    meta_file = f"{name}.tsv"
     out_meta_file = path.join(out_loc, meta_file)
 
-    print("Loading spaCy vectors model: {}".format(vectors_loc))
+    print(f"Loading spaCy vectors model: {vectors_loc}")
     model = spacy.load(vectors_loc)
-    print("Finding lexemes with vectors attached: {}".format(vectors_loc))
+    print(f"Finding lexemes with vectors attached: {vectors_loc}")
     strings_stream = tqdm.tqdm(
         model.vocab.strings, total=len(model.vocab.strings), leave=False
     )
@@ -49,9 +49,7 @@ def main(vectors_loc, out_loc, name="spaCy_vectors"):
     vector_count = len(queries)
 
     print(
-        "Building Tensorboard Projector metadata for ({}) vectors: {}".format(
-            vector_count, out_meta_file
-        )
+        f"Building Tensorboard Projector metadata for ({vector_count}) vectors: {out_meta_file}"
     )
 
     # Store vector data in a tensorflow variable
@@ -63,9 +61,7 @@ def main(vectors_loc, out_loc, name="spaCy_vectors"):
     with open(out_meta_file, "wb") as file_metadata:
         # Define columns in the first row
         file_metadata.write("Text\tFrequency\n".encode("utf-8"))
-        # Write out a row for each vector that we add to the tensorflow variable we created
-        vec_index = 0
-        for text in tqdm.tqdm(queries, total=len(queries), leave=False):
+        for vec_index, text in enumerate(tqdm.tqdm(queries, total=len(queries), leave=False)):
             # https://github.com/tensorflow/tensorflow/issues/9094
             text = "<Space>" if text.lstrip() == "" else text
             lex = model.vocab[text]
@@ -73,12 +69,10 @@ def main(vectors_loc, out_loc, name="spaCy_vectors"):
             # Store vector data and metadata
             tf_vectors_variable[vec_index] = model.vocab.get_vector(text)
             file_metadata.write(
-                "{}\t{}\n".format(text, math.exp(lex.prob) * vector_count).encode(
+                f"{text}\t{math.exp(lex.prob) * vector_count}\n".encode(
                     "utf-8"
                 )
             )
-            vec_index += 1
-
     print("Running Tensorflow Session...")
     sess = tf.InteractiveSession()
     tf.Variable(tf_vectors_variable, trainable=False, name=name)
@@ -97,7 +91,7 @@ def main(vectors_loc, out_loc, name="spaCy_vectors"):
 
     # Save session and print run command to the output
     print("Saving Tensorboard Session...")
-    saver.save(sess, path.join(out_loc, "{}.ckpt".format(name)))
+    saver.save(sess, path.join(out_loc, f"{name}.ckpt"))
     print("Done. Run `tensorboard --logdir={0}` to view in Tensorboard".format(out_loc))
 
 

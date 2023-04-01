@@ -55,11 +55,10 @@ def prefer_gpu():
     used = spacy.util.use_gpu(0)
     if used is None:
         return False
-    else:
-        import cupy.random
+    import cupy.random
 
-        cupy.random.seed(0)
-        return True
+    cupy.random.seed(0)
+    return True
 
 
 def build_textcat_model(tok2vec, nr_class, width):
@@ -110,9 +109,9 @@ def train_tensorizer(nlp, texts, dropout, n_iter):
     tensorizer = nlp.create_pipe("tensorizer")
     nlp.add_pipe(tensorizer)
     optimizer = nlp.begin_training()
-    for i in range(n_iter):
+    for _ in range(n_iter):
         losses = {}
-        for i, batch in enumerate(minibatch(tqdm.tqdm(texts))):
+        for batch in minibatch(tqdm.tqdm(texts)):
             docs = [nlp.make_doc(text) for text in batch]
             tensorizer.update(docs, None, losses=losses, sgd=optimizer, drop=dropout)
         print(losses)
@@ -124,9 +123,7 @@ def train_textcat(nlp, n_texts, n_iter=10):
     tok2vec_weights = textcat.model.tok2vec.to_bytes()
     (train_texts, train_cats), (dev_texts, dev_cats) = load_textcat_data(limit=n_texts)
     print(
-        "Using {} examples ({} training, {} evaluation)".format(
-            n_texts, len(train_texts), len(dev_texts)
-        )
+        f"Using {n_texts} examples ({len(train_texts)} training, {len(dev_texts)} evaluation)"
     )
     train_data = list(zip(train_texts, [{"cats": cats} for cats in train_cats]))
 
@@ -138,7 +135,7 @@ def train_textcat(nlp, n_texts, n_iter=10):
         textcat.model.tok2vec.from_bytes(tok2vec_weights)
         print("Training the model...")
         print("{:^5}\t{:^5}\t{:^5}\t{:^5}".format("LOSS", "P", "R", "F"))
-        for i in range(n_iter):
+        for _ in range(n_iter):
             losses = {"textcat": 0.0}
             # batch up the examples using spaCy's minibatch
             batches = minibatch(tqdm.tqdm(train_data), size=2)
@@ -171,11 +168,11 @@ def evaluate_textcat(tokenizer, textcat, texts, cats):
                 continue
             if score >= 0.5 and gold[label] >= 0.5:
                 tp += 1.0
-            elif score >= 0.5 and gold[label] < 0.5:
+            elif score >= 0.5:
                 fp += 1.0
-            elif score < 0.5 and gold[label] < 0.5:
+            elif gold[label] < 0.5:
                 tn += 1
-            elif score < 0.5 and gold[label] >= 0.5:
+            else:
                 fn += 1
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)

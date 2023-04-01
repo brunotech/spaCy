@@ -59,8 +59,7 @@ class SentimentAnalyser(object):
             ys = self._model.predict(Xs)
             for sent, label in zip(sentences, ys):
                 sent.doc.sentiment += label - 0.5
-            for doc in minibatch:
-                yield doc
+            yield from minibatch
 
     def set_sentiment(self, doc, y):
         doc.sentiment = float(y[0])
@@ -86,10 +85,7 @@ def get_features(docs, max_length):
         j = 0
         for token in doc:
             vector_id = token.vocab.vectors.find(key=token.orth)
-            if vector_id >= 0:
-                Xs[i, j] = vector_id
-            else:
-                Xs[i, j] = 0
+            Xs[i, j] = max(vector_id, 0)
             j += 1
             if j >= max_length:
                 break
@@ -177,7 +173,7 @@ def evaluate(model_dir, texts, labels, max_length=100):
     correct = 0
     i = 0
     for doc in nlp.pipe(texts, batch_size=1000):
-        correct += bool(doc.sentiment >= 0.5) == bool(labels[i])
+        correct += (doc.sentiment >= 0.5) == bool(labels[i])
         i += 1
     return float(correct) / i
 

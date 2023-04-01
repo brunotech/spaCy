@@ -82,13 +82,13 @@ class Scorer(object):
         self.sbd = PRFScore()
         self.unlabelled = PRFScore()
         self.labelled = PRFScore()
-        self.labelled_per_dep = dict()
+        self.labelled_per_dep = {}
         self.tags = PRFScore()
         self.ner = PRFScore()
-        self.ner_per_ents = dict()
+        self.ner_per_ents = {}
         self.eval_punct = eval_punct
         self.textcat = None
-        self.textcat_per_cat = dict()
+        self.textcat_per_cat = {}
         self.textcat_positive_label = None
         self.textcat_multilabel = False
 
@@ -173,14 +173,15 @@ class Scorer(object):
                 return self.textcat.fscore * 100
             # other multiclass
             return (
-                sum([score.fscore for label, score in self.textcat_per_cat.items()])
+                sum(score.fscore for label, score in self.textcat_per_cat.items())
                 / (len(self.textcat_per_cat) + 1e-100)
-                * 100
-            )
+            ) * 100
         # multilabel
         return max(
-            sum([score.score for label, score in self.textcat_per_cat.items()])
-            / (len(self.textcat_per_cat) + 1e-100),
+            (
+                sum(score.score for label, score in self.textcat_per_cat.items())
+                / (len(self.textcat_per_cat) + 1e-100)
+            ),
             -1,
         )
 
@@ -188,15 +189,21 @@ class Scorer(object):
     def textcats_per_cat(self):
         """RETURNS (dict): Scores per textcat label.
         """
-        if not self.textcat_multilabel:
-            return {
-                k: {"p": v.precision * 100, "r": v.recall * 100, "f": v.fscore * 100}
+        return (
+            {
+                k: {"roc_auc_score": max(v.score, -1)}
                 for k, v in self.textcat_per_cat.items()
             }
-        return {
-            k: {"roc_auc_score": max(v.score, -1)}
-            for k, v in self.textcat_per_cat.items()
-        }
+            if self.textcat_multilabel
+            else {
+                k: {
+                    "p": v.precision * 100,
+                    "r": v.recall * 100,
+                    "f": v.fscore * 100,
+                }
+                for k, v in self.textcat_per_cat.items()
+            }
+        )
 
     @property
     def scores(self):
@@ -310,7 +317,7 @@ class Scorer(object):
                 cand_deps_per_dep.get(dep, set()), gold_deps_per_dep.get(dep, set())
             )
         self.unlabelled.score_set(
-            set(item[:2] for item in cand_deps), set(item[:2] for item in gold_deps)
+            {item[:2] for item in cand_deps}, {item[:2] for item in gold_deps}
         )
         if (
             len(gold.cats) > 0
@@ -321,8 +328,8 @@ class Scorer(object):
             candcat = max(doc.cats, key=doc.cats.get)
             if self.textcat_positive_label:
                 self.textcat.score_set(
-                    set([self.textcat_positive_label]) & set([candcat]),
-                    set([self.textcat_positive_label]) & set([goldcat]),
+                    {self.textcat_positive_label} & {candcat},
+                    {self.textcat_positive_label} & {goldcat},
                 )
             for label in self.textcat_per_cat:
                 if self.textcat_multilabel:
@@ -330,9 +337,7 @@ class Scorer(object):
                         doc.cats[label], gold.cats[label]
                     )
                 else:
-                    self.textcat_per_cat[label].score_set(
-                        set([label]) & set([candcat]), set([label]) & set([goldcat])
-                    )
+                    self.textcat_per_cat[label].score_set({label} & {candcat}, {label} & {goldcat})
         elif len(self.textcat_per_cat) > 0:
             model_labels = set(self.textcat_per_cat)
             eval_labels = set(gold.cats)
@@ -481,16 +486,8 @@ def _roc_curve(y_true, y_score):
     fps = np.r_[0, fps]
     thresholds = np.r_[thresholds[0] + 1, thresholds]
 
-    if fps[-1] <= 0:
-        fpr = np.repeat(np.nan, fps.shape)
-    else:
-        fpr = fps / fps[-1]
-
-    if tps[-1] <= 0:
-        tpr = np.repeat(np.nan, tps.shape)
-    else:
-        tpr = tps / tps[-1]
-
+    fpr = np.repeat(np.nan, fps.shape) if fps[-1] <= 0 else fps / fps[-1]
+    tpr = np.repeat(np.nan, tps.shape) if tps[-1] <= 0 else tps / tps[-1]
     return fpr, tpr, thresholds
 
 

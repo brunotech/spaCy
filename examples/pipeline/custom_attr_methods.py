@@ -53,7 +53,7 @@ def to_html(doc, output="/tmp", style="dep"):
             output_path.mkdir()
         output_file = Path(output) / file_name
         output_file.open("w", encoding="utf-8").write(html)  # save to file
-        print("Saved HTML to {}".format(output_file))
+        print(f"Saved HTML to {output_file}")
     else:
         print(html)
 
@@ -61,12 +61,8 @@ def to_html(doc, output="/tmp", style="dep"):
 def overlap_tokens(doc, other_doc):
     """Get the tokens from the original Doc that are also in the comparison Doc.
     """
-    overlap = []
     other_tokens = [token.text for token in other_doc]
-    for token in doc:
-        if token.text in other_tokens:
-            overlap.append(token)
-    return overlap
+    return [token for token in doc if token.text in other_tokens]
 
 
 if __name__ == "__main__":

@@ -45,8 +45,7 @@ def is_ner(tag):
     Check the 10th column of the first token to determine if the file contains
     NER tags
     """
-    tag_match = re.match("([A-Z_]+)-([A-Z_]+)", tag)
-    if tag_match:
+    if tag_match := re.match("([A-Z_]+)-([A-Z_]+)", tag):
         return True
     elif tag == "O":
         return True
@@ -57,8 +56,7 @@ def is_ner(tag):
 def read_conllx(input_data, use_morphology=False, n=0):
     i = 0
     for sent in input_data.strip().split("\n\n"):
-        lines = sent.strip().split("\n")
-        if lines:
+        if lines := sent.strip().split("\n"):
             while lines[0].startswith("#"):
                 lines.pop(0)
             tokens = []
@@ -73,8 +71,8 @@ def read_conllx(input_data, use_morphology=False, n=0):
                     head = (int(head) - 1) if head not in ["0", "_"] else id_
                     dep = "ROOT" if dep == "root" else dep
                     tag = pos if tag == "_" else tag
-                    tag = tag + "__" + morph if use_morphology else tag
-                    iob = iob if iob else "O"
+                    tag = f"{tag}__{morph}" if use_morphology else tag
+                    iob = iob or "O"
                     tokens.append((id_, word, tag, head, dep, iob))
                 except:  # noqa: E722
                     print(line)
@@ -95,47 +93,42 @@ def simplify_tags(iob):
     """
     new_iob = []
     for tag in iob:
-        tag_match = re.match("([A-Z_]+)-([A-Z_]+)", tag)
-        if tag_match:
-            prefix = tag_match.group(1)
-            suffix = tag_match.group(2)
+        if tag_match := re.match("([A-Z_]+)-([A-Z_]+)", tag):
+            prefix = tag_match[1]
+            suffix = tag_match[2]
             if suffix == "GPE_LOC":
                 suffix = "LOC"
             elif suffix == "GPE_ORG":
                 suffix = "ORG"
-            elif suffix != "PER" and suffix != "LOC" and suffix != "ORG":
+            elif suffix not in ["PER", "LOC", "ORG"]:
                 suffix = "MISC"
-            tag = prefix + "-" + suffix
+            tag = f"{prefix}-{suffix}"
         new_iob.append(tag)
     return new_iob
 
 
 def generate_sentence(sent, has_ner_tags):
     (id_, word, tag, head, dep, iob) = sent
-    sentence = {}
     tokens = []
     if has_ner_tags:
         iob = simplify_tags(iob)
         biluo = iob_to_biluo(iob)
     for i, id in enumerate(id_):
-        token = {}
-        token["id"] = id
-        token["orth"] = word[i]
-        token["tag"] = tag[i]
-        token["head"] = head[i] - id
-        token["dep"] = dep[i]
+        token = {
+            "id": id,
+            "orth": word[i],
+            "tag": tag[i],
+            "head": head[i] - id,
+            "dep": dep[i],
+        }
         if has_ner_tags:
             token["ner"] = biluo[i]
         tokens.append(token)
-    sentence["tokens"] = tokens
-    return sentence
+    return {"tokens": tokens}
 
 
 def create_doc(sentences, id):
-    doc = {}
-    paragraph = {}
-    doc["id"] = id
-    doc["paragraphs"] = []
-    paragraph["sentences"] = sentences
+    doc = {"id": id, "paragraphs": []}
+    paragraph = {"sentences": sentences}
     doc["paragraphs"].append(paragraph)
     return doc

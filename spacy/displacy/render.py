@@ -61,7 +61,7 @@ class DependencyRenderer(object):
                 settings = p.get("settings", {})
                 self.direction = settings.get("direction", DEFAULT_DIR)
                 self.lang = settings.get("lang", DEFAULT_LANG)
-            render_id = "{}-{}".format(id_prefix, i)
+            render_id = f"{id_prefix}-{i}"
             svg = self.render_svg(render_id, p["words"], p["arcs"])
             rendered.append(svg)
         if page:
@@ -71,9 +71,7 @@ class DependencyRenderer(object):
             )
         else:
             markup = "".join(rendered)
-        if minify:
-            return minify_html(markup)
-        return markup
+        return minify_html(markup) if minify else markup
 
     def render_svg(self, render_id, words, arcs):
         """Render SVG.
@@ -259,7 +257,7 @@ class EntityRenderer(object):
         }
         user_colors = registry.displacy_colors.get_all()
         for user_color in user_colors.values():
-            colors.update(user_color)
+            colors |= user_color
         colors.update(options.get("colors", {}))
         self.default_color = "#ddd"
         self.colors = colors
@@ -267,14 +265,10 @@ class EntityRenderer(object):
         self.direction = DEFAULT_DIR
         self.lang = DEFAULT_LANG
 
-        template = options.get("template")
-        if template:
+        if template := options.get("template"):
             self.ent_template = template
         else:
-            if self.direction == "rtl":
-                self.ent_template = TPL_ENT_RTL
-            else:
-                self.ent_template = TPL_ENT
+            self.ent_template = TPL_ENT_RTL if self.direction == "rtl" else TPL_ENT
 
     def render(self, parsed, page=False, minify=False):
         """Render complete markup.
@@ -296,9 +290,7 @@ class EntityRenderer(object):
             markup = TPL_PAGE.format(content=docs, lang=self.lang, dir=self.direction)
         else:
             markup = "".join(rendered)
-        if minify:
-            return minify_html(markup)
-        return markup
+        return minify_html(markup) if minify else markup
 
     def render_ents(self, text, spans, title):
         """Render entities in text.
@@ -323,7 +315,7 @@ class EntityRenderer(object):
             if self.ents is None or label.upper() in self.ents:
                 color = self.colors.get(label.upper(), self.default_color)
                 ent_settings = {"label": label, "text": entity, "bg": color}
-                ent_settings.update(additional_params)
+                ent_settings |= additional_params
                 markup += self.ent_template.format(**ent_settings)
             else:
                 markup += entity

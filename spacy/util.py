@@ -70,15 +70,13 @@ def get_lang_class(lang):
     lang (unicode): Two-letter language code, e.g. 'en'.
     RETURNS (Language): Language class.
     """
-    # Check if language is registered / entry point is available
     if lang in registry.languages:
         return registry.languages.get(lang)
-    else:
-        try:
-            module = importlib.import_module(".lang.%s" % lang, "spacy")
-        except ImportError as err:
-            raise ImportError(Errors.E048.format(lang=lang, err=err))
-        set_lang_class(lang, getattr(module, module.__all__[0]))
+    try:
+        module = importlib.import_module(f".lang.{lang}", "spacy")
+    except ImportError as err:
+        raise ImportError(Errors.E048.format(lang=lang, err=err))
+    set_lang_class(lang, getattr(module, module.__all__[0]))
     return registry.languages.get(lang)
 
 
@@ -123,10 +121,7 @@ def ensure_path(path):
     path: Anything. If string, it's converted to Path.
     RETURNS: Path or original argument.
     """
-    if isinstance(path, basestring_):
-        return Path(path)
-    else:
-        return path
+    return Path(path) if isinstance(path, basestring_) else path
 
 
 def load_language_data(path):
@@ -139,7 +134,7 @@ def load_language_data(path):
     path = ensure_path(path)
     if path.exists():
         return srsly.read_json(path)
-    path = path.with_suffix(path.suffix + ".gz")
+    path = path.with_suffix(f"{path.suffix}.gz")
     if path.exists():
         return srsly.read_gzip_json(path)
     raise ValueError(Errors.E160.format(path=path2str(path)))
@@ -164,7 +159,7 @@ def load_model(name, **overrides):
     if isinstance(name, basestring_):  # in data dir / shortcut
         if name.startswith("blank:"):  # shortcut for blank model
             return get_lang_class(name.replace("blank:", ""))()
-        if name in set([d.name for d in data_path.iterdir()]):
+        if name in {d.name for d in data_path.iterdir()}:
             return load_model_from_link(name, **overrides)
         if is_package(name):  # installed as package
             return load_model_from_package(name, **overrides)
@@ -232,7 +227,7 @@ def load_model_from_init_py(init_file, **overrides):
     """
     model_path = Path(init_file).parent
     meta = get_model_meta(model_path)
-    data_dir = "%s_%s-%s" % (meta["lang"], meta["name"], meta["version"])
+    data_dir = f'{meta["lang"]}_{meta["name"]}-{meta["version"]}'
     data_path = model_path / data_dir
     if not model_path.exists():
         raise IOError(Errors.E052.format(path=path2str(data_path)))
@@ -257,7 +252,7 @@ def get_model_meta(path):
             raise ValueError(Errors.E054.format(setting=setting))
     if "spacy_version" in meta:
         about_major_minor = ".".join(about.__version__.split(".")[:2])
-        if not meta["spacy_version"].startswith(">=" + about_major_minor):
+        if not meta["spacy_version"].startswith(f">={about_major_minor}"):
             # try to simplify version requirements from model meta to vx.x
             # for warning message
             meta_spacy_version = "v" + ".".join(
@@ -293,10 +288,7 @@ def is_package(name):
 
     name = name.lower()  # compare package name against lowercase name
     packages = pkg_resources.working_set.by_key.keys()
-    for package in packages:
-        if package.lower().replace("-", "_") == name:
-            return True
-    return False
+    return any(package.lower().replace("-", "_") == name for package in packages)
 
 
 def get_package_path(name):
@@ -338,9 +330,7 @@ def get_component_name(component):
 
 
 def get_cuda_stream(require=False, non_blocking=True):
-    if CudaStream is None:
-        return None
-    elif isinstance(Model.ops, NumpyOps):
+    if CudaStream is None or isinstance(Model.ops, NumpyOps):
         return None
     else:
         return CudaStream(non_blocking=non_blocking)
@@ -349,26 +339,22 @@ def get_cuda_stream(require=False, non_blocking=True):
 def get_async(stream, numpy_array):
     if cupy is None:
         return numpy_array
-    else:
-        array = cupy.ndarray(numpy_array.shape, order="C", dtype=numpy_array.dtype)
-        array.set(numpy_array, stream=stream)
-        return array
+    array = cupy.ndarray(numpy_array.shape, order="C", dtype=numpy_array.dtype)
+    array.set(numpy_array, stream=stream)
+    return array
 
 
 def env_opt(name, default=None):
-    if type(default) is float:
-        type_convert = float
-    else:
-        type_convert = int
-    if "SPACY_" + name.upper() in os.environ:
-        value = type_convert(os.environ["SPACY_" + name.upper()])
+    type_convert = float if type(default) is float else int
+    if f"SPACY_{name.upper()}" in os.environ:
+        value = type_convert(os.environ[f"SPACY_{name.upper()}"])
         if _PRINT_ENV:
-            print(name, "=", repr(value), "via", "$SPACY_" + name.upper())
+            print(name, "=", repr(value), "via", f"$SPACY_{name.upper()}")
         return value
     elif name in os.environ:
         value = type_convert(os.environ[name])
         if _PRINT_ENV:
-            print(name, "=", repr(value), "via", "$" + name)
+            print(name, "=", repr(value), "via", f"${name}")
         return value
     else:
         if _PRINT_ENV:
@@ -381,7 +367,7 @@ def read_regex(path):
     with path.open(encoding="utf8") as file_:
         entries = file_.read().split("\n")
     expression = "|".join(
-        ["^" + re.escape(piece) for piece in entries if piece.strip()]
+        [f"^{re.escape(piece)}" for piece in entries if piece.strip()]
     )
     return re.compile(expression)
 
@@ -395,12 +381,12 @@ def compile_prefix_regex(entries):
     if "(" in entries:
         # Handle deprecated data
         expression = "|".join(
-            ["^" + re.escape(piece) for piece in entries if piece.strip()]
+            [f"^{re.escape(piece)}" for piece in entries if piece.strip()]
         )
-        return re.compile(expression)
     else:
-        expression = "|".join(["^" + piece for piece in entries if piece.strip()])
-        return re.compile(expression)
+        expression = "|".join([f"^{piece}" for piece in entries if piece.strip()])
+
+    return re.compile(expression)
 
 
 def compile_suffix_regex(entries):
@@ -409,7 +395,7 @@ def compile_suffix_regex(entries):
     entries (tuple): The suffix rules, e.g. spacy.lang.punctuation.TOKENIZER_SUFFIXES.
     RETURNS (regex object): The regex object. to be used for Tokenizer.suffix_search.
     """
-    expression = "|".join([piece + "$" for piece in entries if piece.strip()])
+    expression = "|".join([f"{piece}$" for piece in entries if piece.strip()])
     return re.compile(expression)
 
 
@@ -458,7 +444,7 @@ def update_exc(base_exceptions, *addition_dicts):
             described_orth = "".join(attr[ORTH] for attr in token_attrs)
             if orth != described_orth:
                 raise ValueError(Errors.E056.format(key=orth, orths=described_orth))
-        exc.update(additions)
+        exc |= additions
     exc = expand_exc(exc, "'", "’")
     return exc
 
@@ -488,7 +474,7 @@ def expand_exc(excs, search, replace):
 
 
 def normalize_slice(length, start, stop, step=None):
-    if not (step is None or step == 1):
+    if step is not None and step != 1:
         raise ValueError(Errors.E057)
     if start is None:
         start = 0
@@ -507,17 +493,14 @@ def minibatch(items, size=8):
     """Iterate over batches of items. `size` may be an iterator,
     so that batch-size can vary on each step.
     """
-    if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    else:
-        size_ = size
+    size_ = itertools.repeat(size) if isinstance(size, int) else size
     items = iter(items)
     while True:
         batch_size = next(size_)
-        batch = list(itertools.islice(items, int(batch_size)))
-        if len(batch) == 0:
+        if batch := list(itertools.islice(items, int(batch_size))):
+            yield list(batch)
+        else:
             break
-        yield list(batch)
 
 
 def compounding(start, stop, compound):
@@ -575,10 +558,7 @@ def decaying(start, stop, decay):
 
 def minibatch_by_words(items, size, tuples=True, count_words=len):
     """Create minibatches of a given number of words."""
-    if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    else:
-        size_ = size
+    size_ = itertools.repeat(size) if isinstance(size, int) else size
     items = iter(items)
     while True:
         batch_size = next(size_)
@@ -616,10 +596,12 @@ def itershuffle(iterable, bufsize=1000):
     buf = []
     try:
         while True:
-            for i in range(random.randint(1, bufsize - len(buf))):
-                buf.append(next(iterable))
+            buf.extend(
+                next(iterable)
+                for _ in range(random.randint(1, bufsize - len(buf)))
+            )
             random.shuffle(buf)
-            for i in range(random.randint(1, bufsize)):
+            for _ in range(random.randint(1, bufsize)):
                 if buf:
                     yield buf.pop()
                 else:
@@ -649,8 +631,7 @@ def filter_spans(spans):
         if span.start not in seen_tokens and span.end - 1 not in seen_tokens:
             result.append(span)
         seen_tokens.update(range(span.start, span.end))
-    result = sorted(result, key=lambda span: span.start)
-    return result
+    return sorted(result, key=lambda span: span.start)
 
 
 def to_bytes(getters, exclude):
@@ -762,14 +743,11 @@ def validate_json(data, validator):
     """
     errors = []
     for err in sorted(validator.iter_errors(data), key=lambda e: e.path):
-        if err.path:
-            err_path = "[{}]".format(" -> ".join([str(p) for p in err.path]))
-        else:
-            err_path = ""
-        msg = err.message + " " + err_path
+        err_path = f'[{" -> ".join([str(p) for p in err.path])}]' if err.path else ""
+        msg = f"{err.message} {err_path}"
         if err.context:  # Error has suberrors, e.g. if schema uses anyOf
-            suberrs = ["  - {}".format(suberr.message) for suberr in err.context]
-            msg += ":\n{}".format("".join(suberrs))
+            suberrs = [f"  - {suberr.message}" for suberr in err.context]
+            msg += f':\n{"".join(suberrs)}'
         errors.append(msg)
     return errors
 

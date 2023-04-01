@@ -147,10 +147,7 @@ def _get_token_conllu(token, k, sent_len):
         lines = ["\t".join(fields)]
     else:
         lines = []
-    if token.head.i == token.i:
-        head = 0
-    else:
-        head = k + (token.head.i - token.i) + 1
+    head = 0 if token.head.i == token.i else k + (token.head.i - token.i) + 1
     fields = [
         str(k + 1),
         token.text,
@@ -164,10 +161,7 @@ def _get_token_conllu(token, k, sent_len):
         "_",
     ]
     if token.check_morph(Fused_begin) and (k + 1 < sent_len):
-        if k == 0:
-            fields[1] = token.norm_[0].upper() + token.norm_[1:]
-        else:
-            fields[1] = token.norm_
+        fields[1] = token.norm_[0].upper() + token.norm_[1:] if k == 0 else token.norm_
     elif token.check_morph(Fused_inside):
         fields[1] = token.norm_
     elif token._.split_start is not None:
@@ -205,7 +199,7 @@ def guess_fused_orths(word, ud_forms):
         first = word[: len(word) - (len(ud_forms) - 1)]
         output = [first]
         remain = word[len(first) :]
-        for i in range(1, len(ud_forms)):
+        for _ in range(1, len(ud_forms)):
             assert remain
             output.append(remain[:1])
             remain = remain[1:]
@@ -216,17 +210,15 @@ def guess_fused_orths(word, ud_forms):
 def print_results(name, ud_scores):
     fields = {}
     if ud_scores is not None:
-        fields.update(
-            {
-                "words": ud_scores["Words"].f1 * 100,
-                "sents": ud_scores["Sentences"].f1 * 100,
-                "tags": ud_scores["XPOS"].f1 * 100,
-                "uas": ud_scores["UAS"].f1 * 100,
-                "las": ud_scores["LAS"].f1 * 100,
-            }
-        )
+        fields |= {
+            "words": ud_scores["Words"].f1 * 100,
+            "sents": ud_scores["Sentences"].f1 * 100,
+            "tags": ud_scores["XPOS"].f1 * 100,
+            "uas": ud_scores["UAS"].f1 * 100,
+            "las": ud_scores["LAS"].f1 * 100,
+        }
     else:
-        fields.update({"words": 0.0, "sents": 0.0, "tags": 0.0, "uas": 0.0, "las": 0.0})
+        fields |= {"words": 0.0, "sents": 0.0, "tags": 0.0, "uas": 0.0, "las": 0.0}
     tpl = "\t".join(
         (name, "{las:.1f}", "{uas:.1f}", "{tags:.1f}", "{sents:.1f}", "{words:.1f}")
     )
@@ -264,8 +256,7 @@ def get_token_split_end(token):
 
 
 def load_nlp(experiments_dir, corpus):
-    nlp = spacy.load(experiments_dir / corpus / "best-model")
-    return nlp
+    return spacy.load(experiments_dir / corpus / "best-model")
 
 
 def initialize_pipeline(nlp, docs, golds, config, device):
@@ -305,11 +296,14 @@ def main(test_data_dir, experiment_dir, corpus):
             section_dir = "conll17-ud-development-2017-03-19"
         else:
             section_dir = "conll17-ud-test-2017-05-09"
-        text_path = test_data_dir / "input" / section_dir / (treebank_code + ".txt")
+        text_path = test_data_dir / "input" / section_dir / f"{treebank_code}.txt"
         udpipe_path = (
-            test_data_dir / "input" / section_dir / (treebank_code + "-udpipe.conllu")
+            test_data_dir
+            / "input"
+            / section_dir
+            / f"{treebank_code}-udpipe.conllu"
         )
-        gold_path = test_data_dir / "gold" / section_dir / (treebank_code + ".conllu")
+        gold_path = test_data_dir / "gold" / section_dir / f"{treebank_code}.conllu"
 
         header = [section, "LAS", "UAS", "TAG", "SENT", "WORD"]
         print("\t".join(header))

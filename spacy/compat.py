@@ -80,10 +80,7 @@ def b_to_str(b_str):
     b_str (bytes): The object to convert.
     RETURNS (unicode): The converted string.
     """
-    if is_python2:
-        return b_str
-    # Important: if no encoding is set, string becomes "b'...'"
-    return str(b_str, encoding="utf8")
+    return b_str if is_python2 else str(b_str, encoding="utf8")
 
 
 def symlink_to(orig, dest):
@@ -178,4 +175,4 @@ def unescape_unicode(string):
     string = string.replace("\\\\U", "\\U")
     # Now we unescape by evaling the string with the AST. This can't execute
     # code -- it only does the representational level.
-    return ast.literal_eval("u'''" + string + "'''")
+    return ast.literal_eval(f"u'''{string}'''")

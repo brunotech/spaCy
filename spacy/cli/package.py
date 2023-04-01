@@ -47,12 +47,12 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     for key in ("lang", "name", "version"):
         if key not in meta or meta[key] == "":
             msg.fail(
-                "No '{}' setting found in meta.json".format(key),
+                f"No '{key}' setting found in meta.json",
                 "This setting is required to build your package.",
                 exits=1,
             )
     model_name = meta["lang"] + "_" + meta["name"]
-    model_name_v = model_name + "-" + meta["version"]
+    model_name_v = f"{model_name}-" + meta["version"]
     main_path = output_path / model_name_v
     package_path = main_path / model_name
 
@@ -73,7 +73,7 @@ def package(input_dir, output_dir, meta_path=None, create_meta=False, force=Fals
     create_file(main_path / "setup.py", TEMPLATE_SETUP)
     create_file(main_path / "MANIFEST.in", TEMPLATE_MANIFEST)
     create_file(package_path / "__init__.py", TEMPLATE_INIT)
-    msg.good("Successfully created package '{}'".format(model_name_v), main_path)
+    msg.good(f"Successfully created package '{model_name_v}'", main_path)
     msg.text("To build the package, run `python setup.py sdist` in this directory.")
 
 
@@ -88,7 +88,11 @@ def generate_meta(model_path, existing_meta, msg):
         ("lang", "Model language", meta.get("lang", "en")),
         ("name", "Model name", meta.get("name", "model")),
         ("version", "Model version", meta.get("version", "0.0.0")),
-        ("spacy_version", "Required spaCy version", ">=%s,<3.0.0" % about.__version__),
+        (
+            "spacy_version",
+            "Required spaCy version",
+            f">={about.__version__},<3.0.0",
+        ),
         ("description", "Model description", meta.get("description", False)),
         ("author", "Author", meta.get("author", False)),
         ("email", "Author email", meta.get("email", False)),

@@ -38,10 +38,7 @@ def cosine(vec1, vec2):
     xp = get_array_module(vec1)
     norm1 = xp.linalg.norm(vec1)
     norm2 = xp.linalg.norm(vec2)
-    if norm1 == 0.0 or norm2 == 0.0:
-        return 0
-    else:
-        return vec1.dot(vec2) / (norm1 * norm2)
+    return 0 if norm1 == 0.0 or norm2 == 0.0 else vec1.dot(vec2) / (norm1 * norm2)
 
 
 def create_default_optimizer(ops, **cfg):
@@ -101,7 +98,7 @@ def _to_cpu(X):
     if isinstance(X, numpy.ndarray):
         return X
     elif isinstance(X, tuple):
-        return tuple([_to_cpu(x) for x in X])
+        return tuple(_to_cpu(x) for x in X)
     elif isinstance(X, list):
         return [_to_cpu(x) for x in X]
     elif hasattr(X, "get"):
@@ -112,7 +109,7 @@ def _to_cpu(X):
 
 def _to_device(ops, X):
     if isinstance(X, tuple):
-        return tuple([_to_device(ops, x) for x in X])
+        return tuple(_to_device(ops, x) for x in X)
     elif isinstance(X, list):
         return [_to_device(ops, x) for x in X]
     else:
@@ -131,8 +128,9 @@ class extract_ngrams(Model):
         for doc in docs:
             unigrams = doc.to_array([self.attr])
             ngrams = [unigrams]
-            for n in range(2, self.ngram_size + 1):
-                ngrams.append(self.ops.ngrams(n, unigrams))
+            ngrams.extend(
+                self.ops.ngrams(n, unigrams) for n in range(2, self.ngram_size + 1)
+            )
             keys = self.ops.xp.concatenate(ngrams)
             keys, vals = self.ops.xp.unique(keys, return_counts=True)
             batch_keys.append(keys)
@@ -211,8 +209,7 @@ class PrecomputableAffine(Model):
         return Yf, backward
 
     def _add_padding(self, Yf):
-        Yf_padded = self.ops.xp.vstack((self.pad, Yf))
-        return Yf_padded
+        return self.ops.xp.vstack((self.pad, Yf))
 
     def _backprop_padding(self, dY, ids):
         # (1, nF, nO, nP) += (nN, nF, nO, nP) where IDs (nN, nF) < 0
@@ -296,14 +293,16 @@ def link_vectors_to_models(vocab, skip_rank=False):
     # Set an entry here, so that vectors are accessed by StaticVectors
     # (unideal, I know)
     key = (ops.device, vectors.name)
-    if key in thinc.extra.load_nlp.VECTORS:
-        if thinc.extra.load_nlp.VECTORS[key].shape != data.shape:
-            # This is a hack to avoid the problem in #3853.
-            old_name = vectors.name
-            new_name = vectors.name + "_%d" % data.shape[0]
-            warnings.warn(Warnings.W019.format(old=old_name, new=new_name))
-            vectors.name = new_name
-            key = (ops.device, vectors.name)
+    if (
+        key in thinc.extra.load_nlp.VECTORS
+        and thinc.extra.load_nlp.VECTORS[key].shape != data.shape
+    ):
+        # This is a hack to avoid the problem in #3853.
+        old_name = vectors.name
+        new_name = vectors.name + "_%d" % data.shape[0]
+        warnings.warn(Warnings.W019.format(old=old_name, new=new_name))
+        vectors.name = new_name
+        key = (ops.device, vectors.name)
     thinc.extra.load_nlp.VECTORS[key] = data
 
 
@@ -322,7 +321,7 @@ def Tok2Vec(width, embed_size, **kwargs):
     if not USE_MODEL_REGISTRY_TOK2VEC:
         # Preserve prior tok2vec for backwards compat, in v2.2.2
         return _legacy_tok2vec.Tok2Vec(width, embed_size, **kwargs)
-    pretrained_vectors = kwargs.get("pretrained_vectors", None)
+    pretrained_vectors = kwargs.get("pretrained_vectors")
     cnn_maxout_pieces = kwargs.get("cnn_maxout_pieces", 3)
     subword_features = kwargs.get("subword_features", True)
     char_embed = kwargs.get("char_embed", False)
@@ -448,10 +447,7 @@ def get_col(idx):
         raise IndexError(Errors.E066.format(value=idx))
 
     def forward(X, drop=0.0):
-        if isinstance(X, numpy.ndarray):
-            ops = NumpyOps()
-        else:
-            ops = CupyOps()
+        ops = NumpyOps() if isinstance(X, numpy.ndarray) else CupyOps()
         output = ops.xp.ascontiguousarray(X[:, idx], dtype=X.dtype)
 
         def backward(y, sgd=None):
@@ -642,7 +638,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
     pretrained_dims = cfg.get("pretrained_dims", 0)
     with Model.define_operators({">>": chain, "+": add, "|": concatenate, "**": clone}):
         if cfg.get("low_data") and pretrained_dims:
-            model = (
+            return (
                 SpacyVectors
                 >> flatten_add_lengths
                 >> with_getitem(0, Affine(width, pretrained_dims))
@@ -652,8 +648,6 @@ def build_text_classifier(nr_class, width=64, **cfg):
                 >> zero_init(Affine(nr_class, width, drop_factor=0.0))
                 >> logistic
             )
-            return model
-
         lower = HashEmbed(width, nr_vector, column=1)
         prefix = HashEmbed(width // 2, nr_vector, column=2)
         suffix = HashEmbed(width // 2, nr_vector, column=3)
@@ -761,7 +755,7 @@ def build_nel_encoder(embed_width, hidden_width, ner_types, **cfg):
 
     conv_depth = cfg.get("conv_depth", 2)
     cnn_maxout_pieces = cfg.get("cnn_maxout_pieces", 3)
-    pretrained_vectors = cfg.get("pretrained_vectors", None)
+    pretrained_vectors = cfg.get("pretrained_vectors")
     context_width = cfg.get("entity_width")
 
     with Model.define_operators({">>": chain, "**": clone}):
@@ -880,10 +874,7 @@ def _apply_mask(docs, random_words, mask_prob=0.15):
     for doc in docs:
         words = []
         for token in doc:
-            if not mask[i]:
-                word = _replace_word(token.text, random_words)
-            else:
-                word = token.text
+            word = token.text if mask[i] else _replace_word(token.text, random_words)
             words.append(word)
             i += 1
         spaces = [bool(w.whitespace_) for w in doc]

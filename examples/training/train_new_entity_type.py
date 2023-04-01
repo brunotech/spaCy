@@ -74,7 +74,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
     random.seed(0)
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
-        print("Loaded model '%s'" % model)
+        print(f"Loaded model '{model}'")
     else:
         nlp = spacy.blank("en")  # create blank Language class
         print("Created blank 'en' model")
@@ -90,22 +90,19 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
     ner.add_label(LABEL)  # add new entity label to entity recognizer
     # Adding extraneous labels shouldn't mess anything up
     ner.add_label("VEGETABLE")
-    if model is None:
-        optimizer = nlp.begin_training()
-    else:
-        optimizer = nlp.resume_training()
+    optimizer = nlp.begin_training() if model is None else nlp.resume_training()
     move_names = list(ner.move_names)
     # get names of other pipes to disable them during training
     pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     # only train NER
-    with nlp.disable_pipes(*other_pipes), warnings.catch_warnings():
+    with (nlp.disable_pipes(*other_pipes), warnings.catch_warnings()):
         # show warnings for misaligned entity spans once
         warnings.filterwarnings("once", category=UserWarning, module='spacy')
 
         sizes = compounding(1.0, 4.0, 1.001)
         # batch up the examples using spaCy's minibatch
-        for itn in range(n_iter):
+        for _ in range(n_iter):
             random.shuffle(TRAIN_DATA)
             batches = minibatch(TRAIN_DATA, size=sizes)
             losses = {}
@@ -117,7 +114,7 @@ def main(model=None, new_model_name="animal", output_dir=None, n_iter=30):
     # test the trained model
     test_text = "Do you like horses?"
     doc = nlp(test_text)
-    print("Entities in '%s'" % test_text)
+    print(f"Entities in '{test_text}'")
     for ent in doc.ents:
         print(ent.label_, ent.text)
 

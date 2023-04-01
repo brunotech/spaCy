@@ -38,7 +38,7 @@ def info(model=None, markdown=False, silent=False):
         else:
             meta["source"] = path2str(model_path)
         if not silent:
-            title = "Info about model '{}'".format(model)
+            title = f"Info about model '{model}'"
             model_meta = {
                 k: v for k, v in meta.items() if k not in ("accuracy", "speed")
             }
@@ -82,11 +82,11 @@ def print_markdown(data, title=None):
     data (dict or list of tuples): Label/value pairs.
     title (unicode or None): Title, will be rendered as headline 2.
     """
-    markdown = []
-    for key, value in data.items():
-        if isinstance(value, basestring_) and Path(value).exists():
-            continue
-        markdown.append("* **{}:** {}".format(key, unicode_(value)))
+    markdown = [
+        f"* **{key}:** {unicode_(value)}"
+        for key, value in data.items()
+        if not isinstance(value, basestring_) or not Path(value).exists()
+    ]
     if title:
-        print("\n## {}".format(title))
+        print(f"\n## {title}")
     print("\n{}\n".format("\n".join(markdown)))

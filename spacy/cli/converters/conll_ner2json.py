@@ -64,9 +64,7 @@ def conll_ner2json(
         # sentence segmentation required for document segmentation
         if n_sents > 0 and not seg_sents:
             msg.warn(
-                "No sentence boundaries found to use with option `-n {}`. "
-                "Use `-s` to automatically segment sentences or `-n 0` "
-                "to disable.".format(n_sents)
+                f"No sentence boundaries found to use with option `-n {n_sents}`. Use `-s` to automatically segment sentences or `-n 0` to disable."
             )
         else:
             n_sents_info(msg, n_sents)
@@ -104,10 +102,7 @@ def conll_ner2json(
                 )
             words = cols[0]
             iob_ents = cols[-1]
-            if len(cols) > 2:
-                tags = cols[1]
-            else:
-                tags = ["-"] * len(words)
+            tags = cols[1] if len(cols) > 2 else ["-"] * len(words)
             biluo_ents = iob_to_biluo(iob_ents)
             output_doc.append(
                 {
@@ -129,7 +124,7 @@ def segment_sents_and_docs(doc, n_sents, doc_delimiter, model=None, msg=None):
     if model:
         nlp = load_model(model)
         if "parser" in nlp.pipe_names:
-            msg.info("Segmenting sentences with parser from model '{}'.".format(model))
+            msg.info(f"Segmenting sentences with parser from model '{model}'.")
             sentencizer = nlp.get_pipe("parser")
     if not sentencizer:
         msg.info(
@@ -166,7 +161,7 @@ def segment_docs(input_data, n_sents, doc_delimiter):
 
 
 def n_sents_info(msg, n_sents):
-    msg.info("Grouping every {} sentences into a document.".format(n_sents))
+    msg.info(f"Grouping every {n_sents} sentences into a document.")
     if n_sents == 1:
         msg.warn(
             "To generate better training data, you may want to group "

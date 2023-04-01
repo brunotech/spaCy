@@ -22,13 +22,7 @@ from spacy.language import Language
     ),
 )
 def main(vectors_loc, lang=None):
-    if lang is None:
-        nlp = Language()
-    else:
-        # create empty language class – this is required if you're planning to
-        # save the model to disk and load it back later (models always need a
-        # "lang" setting). Use 'xx' for blank multi-language class.
-        nlp = spacy.blank(lang)
+    nlp = Language() if lang is None else spacy.blank(lang)
     with open(vectors_loc, "rb") as file_:
         header = file_.readline()
         nr_row, nr_dim = header.split()

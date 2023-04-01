@@ -4,19 +4,16 @@ from __future__ import unicode_literals
 from ...symbols import ORTH, LEMMA
 
 
-_exc = {}
-
-
-# Time
-for exc_data in [
-    {LEMMA: "قبل الميلاد", ORTH: "ق.م"},
-    {LEMMA: "بعد الميلاد", ORTH: "ب. م"},
-    {LEMMA: "ميلادي", ORTH: ".م"},
-    {LEMMA: "هجري", ORTH: ".هـ"},
-    {LEMMA: "توفي", ORTH: ".ت"},
-]:
-    _exc[exc_data[ORTH]] = [exc_data]
-
+_exc = {
+    exc_data[ORTH]: [exc_data]
+    for exc_data in [
+        {LEMMA: "قبل الميلاد", ORTH: "ق.م"},
+        {LEMMA: "بعد الميلاد", ORTH: "ب. م"},
+        {LEMMA: "ميلادي", ORTH: ".م"},
+        {LEMMA: "هجري", ORTH: ".هـ"},
+        {LEMMA: "توفي", ORTH: ".ت"},
+    ]
+}
 # Scientific abv.
 for exc_data in [
     {LEMMA: "صلى الله عليه وسلم", ORTH: "صلعم"},

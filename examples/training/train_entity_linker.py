@@ -26,19 +26,14 @@ from spacy.util import minibatch, compounding
 
 
 def sample_train_data():
-    train_data = []
-
     # Q2146908 (Russ Cochran): American golfer
     # Q7381115 (Russ Cochran): publisher
 
     text_1 = "Russ Cochran his reprints include EC Comics."
     dict_1 = {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}
-    train_data.append((text_1, {"links": dict_1}))
-
     text_2 = "Russ Cochran has been publishing comic art."
     dict_2 = {(0, 12): {"Q7381115": 1.0, "Q2146908": 0.0}}
-    train_data.append((text_2, {"links": dict_2}))
-
+    train_data = [(text_1, {"links": dict_1}), (text_2, {"links": dict_2})]
     text_3 = "Russ Cochran captured his first major title with his son as caddie."
     dict_3 = {(0, 12): {"Q7381115": 0.0, "Q2146908": 1.0}}
     train_data.append((text_3, {"links": dict_3}))
@@ -67,7 +62,7 @@ def main(kb_path, vocab_path, output_dir=None, n_iter=50):
     nlp = spacy.blank("en")
     nlp.vocab.from_disk(vocab_path)
     nlp.vocab.vectors.name = "spacy_pretrained_vectors"
-    print("Created blank 'en' model with vocab from '%s'" % vocab_path)
+    print(f"Created blank 'en' model with vocab from '{vocab_path}'")
 
     # Add a sentencizer component. Alternatively, add a dependency parser for higher accuracy.
     nlp.add_pipe(nlp.create_pipe('sentencizer'))
@@ -86,7 +81,7 @@ def main(kb_path, vocab_path, output_dir=None, n_iter=50):
         entity_linker = nlp.create_pipe("entity_linker", cfg)
         kb = KnowledgeBase(vocab=nlp.vocab)
         kb.load_bulk(kb_path)
-        print("Loaded Knowledge Base from '%s'" % kb_path)
+        print(f"Loaded Knowledge Base from '{kb_path}'")
         entity_linker.set_kb(kb)
         nlp.add_pipe(entity_linker, last=True)
 
@@ -98,7 +93,7 @@ def main(kb_path, vocab_path, output_dir=None, n_iter=50):
         with nlp.disable_pipes("entity_linker"):
             doc = nlp(text)
         annotation_clean = annotation
-        for offset, kb_id_dict in annotation["links"].items():
+        for offset, kb_id_dict in annotation_clean["links"].items():
             new_dict = {}
             for kb_id, value in kb_id_dict.items():
                 if kb_id in kb_ids:

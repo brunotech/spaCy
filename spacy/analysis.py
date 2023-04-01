@@ -47,10 +47,10 @@ def analyze_all_pipes(pipeline, warn=True):
     warn (bool): Show user warning if problem is found.
     RETURNS (dict): The problems found, keyed by component name.
     """
-    problems = {}
-    for i, (name, pipe) in enumerate(pipeline):
-        problems[name] = analyze_pipes(pipeline, name, pipe, i, warn=warn)
-    return problems
+    return {
+        name: analyze_pipes(pipeline, name, pipe, i, warn=warn)
+        for i, (name, pipe) in enumerate(pipeline)
+    }
 
 
 def dot_to_dict(values):
@@ -85,8 +85,9 @@ def validate_attrs(values):
         if obj_key == "span":
             # Support Span only for custom extension attributes
             span_attrs = [attr for attr in values if attr.startswith("span.")]
-            span_attrs = [attr for attr in span_attrs if not attr.startswith("span._.")]
-            if span_attrs:
+            if span_attrs := [
+                attr for attr in span_attrs if not attr.startswith("span._.")
+            ]:
                 raise ValueError(Errors.E180.format(attrs=", ".join(span_attrs)))
         if obj_key not in objs:  # first element is not doc/token/span
             invalid_attrs = ", ".join(a for a in values if a.startswith(obj_key))
@@ -96,19 +97,19 @@ def validate_attrs(values):
         for attr, value in attrs.items():
             if attr == "_":
                 if value is True:  # attr is something like "doc._"
-                    raise ValueError(Errors.E182.format(attr="{}._".format(obj_key)))
+                    raise ValueError(Errors.E182.format(attr=f"{obj_key}._"))
                 for ext_attr, ext_value in value.items():
                     # We don't check whether the attribute actually exists
                     if ext_value is not True:  # attr is something like doc._.x.y
-                        good = "{}._.{}".format(obj_key, ext_attr)
-                        bad = "{}.{}".format(good, ".".join(ext_value))
+                        good = f"{obj_key}._.{ext_attr}"
+                        bad = f'{good}.{".".join(ext_value)}'
                         raise ValueError(Errors.E183.format(attr=bad, solution=good))
                 continue  # we can't validate those further
             if attr.endswith("_"):  # attr is something like "token.pos_"
                 raise ValueError(Errors.E184.format(attr=attr, solution=attr[:-1]))
             if value is not True:  # attr is something like doc.x.y
-                good = "{}.{}".format(obj_key, attr)
-                bad = "{}.{}".format(good, ".".join(value))
+                good = f"{obj_key}.{attr}"
+                bad = f'{good}.{".".join(value)}'
                 raise ValueError(Errors.E183.format(attr=bad, solution=good))
             obj = objs[obj_key]
             if not hasattr(obj, attr):
@@ -169,12 +170,12 @@ def print_summary(nlp, pretty=True, no_print=False):
     header = ("#", "Component", "Requires", "Assigns", "Retokenizes")
     msg.table(overview, header=header, divider=True, multiline=True)
     n_problems = sum(len(p) for p in problems.values())
-    if any(p for p in problems.values()):
-        msg.divider("Problems ({})".format(n_problems))
+    if any(problems.values()):
+        msg.divider(f"Problems ({n_problems})")
         for name, problem in problems.items():
             if problem:
                 problem = ", ".join(problem)
-                msg.warn("'{}' requirements not met: {}".format(name, problem))
+                msg.warn(f"'{name}' requirements not met: {problem}")
     else:
         msg.good("No problems found.")
     if no_print:

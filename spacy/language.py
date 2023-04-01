@@ -56,7 +56,7 @@ class BaseDefaults(object):
         if LANG in cls.lex_attr_getters:
             lang = cls.lex_attr_getters[LANG](None)
             if lang in util.registry.lookups:
-                filenames.update(util.registry.lookups.get(lang))
+                filenames |= util.registry.lookups.get(lang)
         lookups = Lookups()
         for name, filename in filenames.items():
             data = util.load_language_data(filename)
@@ -177,9 +177,8 @@ class Language(object):
             vocab = factory(self, **meta.get("vocab", {}))
             if vocab.vectors.name is None:
                 vocab.vectors.name = meta.get("vectors", {}).get("name")
-        else:
-            if (self.lang and vocab.lang) and (self.lang != vocab.lang):
-                raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
+        elif (self.lang and vocab.lang) and (self.lang != vocab.lang):
+            raise ValueError(Errors.E150.format(nlp=self.lang, vocab=vocab.lang))
         self.vocab = vocab
         if make_doc is True:
             factory = self.Defaults.create_tokenizer
@@ -201,7 +200,7 @@ class Language(object):
             self._meta.setdefault("lang", self.lang)
         self._meta.setdefault("name", "model")
         self._meta.setdefault("version", "0.0.0")
-        self._meta.setdefault("spacy_version", ">={}".format(about.__version__))
+        self._meta.setdefault("spacy_version", f">={about.__version__}")
         self._meta.setdefault("description", "")
         self._meta.setdefault("author", "")
         self._meta.setdefault("email", "")
@@ -263,10 +262,10 @@ class Language(object):
 
         RETURNS (dict): Factory names, keyed by component names.
         """
-        factories = {}
-        for pipe_name, pipe in self.pipeline:
-            factories[pipe_name] = getattr(pipe, "factory", pipe_name)
-        return factories
+        return {
+            pipe_name: getattr(pipe, "factory", pipe_name)
+            for pipe_name, pipe in self.pipeline
+        }
 
     @property
     def pipe_labels(self):
@@ -475,8 +474,7 @@ class Language(object):
             if isinstance(doc, basestring_):
                 doc = self.make_doc(doc)
             if not isinstance(gold, GoldParse):
-                unexpected = [k for k in gold if k not in expected_keys]
-                if unexpected:
+                if unexpected := [k for k in gold if k not in expected_keys]:
                     err = Errors.E151.format(unexp=unexpected, exp=expected_keys)
                     raise ValueError(err)
                 gold = GoldParse(doc, **gold)
@@ -592,8 +590,7 @@ class Language(object):
         for name, proc in self.pipeline:
             if hasattr(proc, "preprocess_gold"):
                 docs_golds = proc.preprocess_gold(docs_golds)
-        for doc, gold in docs_golds:
-            yield doc, gold
+        yield from docs_golds
 
     def begin_training(self, get_gold_tuples=None, sgd=None, component_cfg=None, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
@@ -692,10 +689,11 @@ class Language(object):
         for name, pipe in self.pipeline:
             kwargs = component_cfg.get(name, {})
             kwargs.setdefault("batch_size", batch_size)
-            if not hasattr(pipe, "pipe"):
-                docs = _pipe(docs, pipe, kwargs)
-            else:
-                docs = pipe.pipe(docs, **kwargs)
+            docs = (
+                pipe.pipe(docs, **kwargs)
+                if hasattr(pipe, "pipe")
+                else _pipe(docs, pipe, kwargs)
+            )
         for doc, gold in zip(docs, golds):
             if not isinstance(gold, GoldParse):
                 gold = GoldParse(doc, **gold)
@@ -785,8 +783,7 @@ class Language(object):
                 n_process=n_process,
                 component_cfg=component_cfg,
             )
-            for doc, context in izip(docs, contexts):
-                yield (doc, context)
+            yield from izip(docs, contexts)
             return
         if component_cfg is None:
             component_cfg = {}
@@ -1097,7 +1094,7 @@ def _fix_pretrained_vectors_name(nlp):
     elif not nlp.vocab.vectors.size:
         nlp.vocab.vectors.name = None
     elif "name" in nlp.meta and "lang" in nlp.meta:
-        vectors_name = "%s_%s.vectors" % (nlp.meta["lang"], nlp.meta["name"])
+        vectors_name = f'{nlp.meta["lang"]}_{nlp.meta["name"]}.vectors'
         nlp.vocab.vectors.name = vectors_name
     else:
         raise ValueError(Errors.E092)
@@ -1132,8 +1129,9 @@ class DisabledPipes(list):
     def restore(self):
         """Restore the pipeline to its state when DisabledPipes was created."""
         current, self.nlp.pipeline = self.nlp.pipeline, self.original_pipeline
-        unexpected = [name for name, pipe in current if not self.nlp.has_pipe(name)]
-        if unexpected:
+        if unexpected := [
+            name for name, pipe in current if not self.nlp.has_pipe(name)
+        ]:
             # Don't change the pipeline if we're raising an error.
             self.nlp.pipeline = current
             raise ValueError(Errors.E008.format(names=unexpected))
@@ -1147,8 +1145,7 @@ def _pipe(docs, proc, kwargs):
         if arg in kwargs:
             kwargs.pop(arg)
     for doc in docs:
-        doc = proc(doc, **kwargs)
-        yield doc
+        yield proc(doc, **kwargs)
 
 
 def _apply_pipes(make_doc, pipes, receiver, sender, underscore_state, vectors):

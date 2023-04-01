@@ -21,7 +21,7 @@ def validate():
         r = requests.get(about.__compatibility__)
         if r.status_code != 200:
             msg.fail(
-                "Server error ({})".format(r.status_code),
+                f"Server error ({r.status_code})",
                 "Couldn't fetch compatibility table.",
                 exits=1,
             )
@@ -32,7 +32,7 @@ def validate():
     current_compat = compat.get(version)
     if not current_compat:
         msg.fail(
-            "Can't find spaCy v{} in compatibility table".format(version),
+            f"Can't find spaCy v{version} in compatibility table",
             about.__compatibility__,
             exits=1,
         )
@@ -52,16 +52,19 @@ def validate():
     update_models = [m for m in incompat_models if m in current_compat]
     spacy_dir = Path(__file__).parent.parent
 
-    msg.divider("Installed models (spaCy v{})".format(about.__version__))
-    msg.info("spaCy installation: {}".format(path2str(spacy_dir)))
+    msg.divider(f"Installed models (spaCy v{about.__version__})")
+    msg.info(f"spaCy installation: {path2str(spacy_dir)}")
 
     if model_links or model_pkgs:
+        rows = [
+            get_model_row(current_compat, name, data, msg)
+            for name, data in model_pkgs.items()
+        ]
+        rows.extend(
+            get_model_row(current_compat, name, data, msg, "link")
+            for name, data in model_links.items()
+        )
         header = ("TYPE", "NAME", "MODEL", "VERSION", "")
-        rows = []
-        for name, data in model_pkgs.items():
-            rows.append(get_model_row(current_compat, name, data, msg))
-        for name, data in model_links.items():
-            rows.append(get_model_row(current_compat, name, data, msg, "link"))
         msg.table(rows, header=header)
     else:
         msg.text("No models found in your current environment.", exits=0)
@@ -72,8 +75,7 @@ def validate():
         print("\n".join([cmd.format(pkg) for pkg in update_models]) + "\n")
     if na_models:
         msg.text(
-            "The following models are not available for spaCy "
-            "v{}: {}".format(about.__version__, ", ".join(na_models))
+            f'The following models are not available for spaCy v{about.__version__}: {", ".join(na_models)}'
         )
     if incompat_links:
         msg.text(
@@ -88,8 +90,7 @@ def validate():
 
 def get_model_links(compat):
     links = {}
-    data_path = get_data_path()
-    if data_path:
+    if data_path := get_data_path():
         models = [p for p in data_path.iterdir() if is_model_path(p)]
         for model in models:
             meta_path = Path(model) / "meta.json"
@@ -128,7 +129,7 @@ def get_model_row(compat, name, data, msg, model_type="package"):
         version = msg.text(data["version"], color="green", no_print=True)
     else:
         version = msg.text(data["version"], color="red", no_print=True)
-        comp = "--> {}".format(compat.get(data["name"], ["n/a"])[0])
+        comp = f'--> {compat.get(data["name"], ["n/a"])[0]}'
     return (model_type, name, data["name"], version, comp)
 
 

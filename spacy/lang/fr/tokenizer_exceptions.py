@@ -15,17 +15,13 @@ FR_BASE_EXCEPTIONS = ["aujourd'hui", "Aujourd'hui"]
 def upper_first_letter(text):
     if len(text) == 0:
         return text
-    if len(text) == 1:
-        return text.upper()
-    return text[0].upper() + text[1:]
+    return text.upper() if len(text) == 1 else text[0].upper() + text[1:]
 
 
 def lower_first_letter(text):
     if len(text) == 0:
         return text
-    if len(text) == 1:
-        return text.lower()
-    return text[0].lower() + text[1:]
+    return text.lower() if len(text) == 1 else text[0].lower() + text[1:]
 
 
 _exc = {"J.-C.": [{LEMMA: "Jésus", ORTH: "J."}, {LEMMA: "Christ", ORTH: "-C."}]}
@@ -90,16 +86,16 @@ for verb, verb_lemma in [
 ]:
     for orth in [verb, verb.title()]:
         for pronoun in ["elle", "il", "on"]:
-            token = "{}-t-{}".format(orth, pronoun)
+            token = f"{orth}-t-{pronoun}"
             _exc[token] = [
-                {LEMMA: verb_lemma, ORTH: orth},  # , TAG: "VERB"},
+                {LEMMA: verb_lemma, ORTH: orth},
                 {LEMMA: "t", ORTH: "-t"},
-                {LEMMA: pronoun, ORTH: "-" + pronoun},
+                {LEMMA: pronoun, ORTH: f"-{pronoun}"},
             ]
 
 for verb, verb_lemma in [("est", "être")]:
     for orth in [verb, verb.title()]:
-        token = "{}-ce".format(orth)
+        token = f"{orth}-ce"
         _exc[token] = [
             {LEMMA: verb_lemma, ORTH: orth},  # , TAG: "VERB"},
             {LEMMA: "ce", ORTH: "-ce"},
@@ -108,7 +104,7 @@ for verb, verb_lemma in [("est", "être")]:
 
 for pre, pre_lemma in [("qu'", "que"), ("n'", "ne")]:
     for orth in [pre, pre.title()]:
-        _exc["%sest-ce" % orth] = [
+        _exc[f"{orth}est-ce"] = [
             {LEMMA: pre_lemma, ORTH: orth},
             {LEMMA: "être", ORTH: "est"},
             {LEMMA: "ce", ORTH: "-ce"},
@@ -116,19 +112,19 @@ for pre, pre_lemma in [("qu'", "que"), ("n'", "ne")]:
 
 
 for verb, pronoun in [("est", "il"), ("EST", "IL")]:
-    token = "{}-{}".format(verb, pronoun)
+    token = f"{verb}-{pronoun}"
     _exc[token] = [
         {LEMMA: "être", ORTH: verb},
-        {LEMMA: pronoun, ORTH: "-" + pronoun},
+        {LEMMA: pronoun, ORTH: f"-{pronoun}"},
     ]
 
 
 for s, verb, pronoun in [("s", "est", "il"), ("S", "EST", "IL")]:
-    token = "{}'{}-{}".format(s, verb, pronoun)
+    token = f"{s}'{verb}-{pronoun}"
     _exc[token] = [
-        {LEMMA: "se", ORTH: s + "'"},
+        {LEMMA: "se", ORTH: f"{s}'"},
         {LEMMA: "être", ORTH: verb},
-        {LEMMA: pronoun, ORTH: "-" + pronoun},
+        {LEMMA: pronoun, ORTH: f"-{pronoun}"},
     ]
 
 
@@ -457,5 +453,5 @@ _regular_exp += [
 
 TOKENIZER_EXCEPTIONS = _exc
 TOKEN_MATCH = re.compile(
-    "(?iu)" + "|".join("(?:{})".format(m) for m in _regular_exp)
+    "(?iu)" + "|".join(f"(?:{m})" for m in _regular_exp)
 ).match

@@ -47,7 +47,7 @@ def noun_bounds(doc, root, np_left_deps, np_right_deps, stop_deps):
         if token.dep in np_left_deps:
             left_bound = token
     right_bound = root
-    for token in root.rights:
+    for token in right_bound.rights:
         if token.dep in np_right_deps:
             left, right = noun_bounds(
                 doc, token, np_left_deps, np_right_deps, stop_deps

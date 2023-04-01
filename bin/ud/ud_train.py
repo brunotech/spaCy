@@ -79,7 +79,7 @@ def read_data(
                 sent["words"].append(word)
                 sent["tags"].append(tag)
                 sent["morphology"].append(_parse_morph_string(morph))
-                sent["morphology"][-1].add("POS_%s" % pos)
+                sent["morphology"][-1].add(f"POS_{pos}")
                 sent["heads"].append(head)
                 sent["deps"].append("ROOT" if dep == "root" else dep)
                 sent["spaces"].append(space_after == "_")
@@ -117,7 +117,7 @@ def _parse_morph_string(morph_string):
         key, value = feature.split('=')
         value = replacements.get(value, value)
         value = value.split(',')[0]
-        output.append('%s_%s' % (key, value.lower()))
+        output.append(f'{key}_{value.lower()}')
     return set(output)
 
 def read_conllu(file_):
@@ -256,9 +256,7 @@ def write_conllu(docs, file_):
                         print(word.i, word.head.i, word.text, word.dep_)
                     for word in doc[sent[-1].i : sent[-1].i + 10]:
                         print(word.i, word.head.i, word.text, word.dep_)
-                    raise ValueError(
-                        "Invalid parse: head outside sentence (%s)" % token.text
-                    )
+                    raise ValueError(f"Invalid parse: head outside sentence ({token.text})")
                 file_.write(token._.get_conllu_lines(k) + "\n")
             file_.write("\n")
 
@@ -275,8 +273,8 @@ def print_progress(itn, losses, ud_scores):
         "las": ud_scores["LAS"].f1 * 100,
         "morph": ud_scores["Feats"].f1 * 100,
     }
-    header = ["Epoch", "P.Loss", "M.Loss", "LAS", "UAS", "TAG", "MORPH", "SENT", "WORD"]
     if itn == 0:
+        header = ["Epoch", "P.Loss", "M.Loss", "LAS", "UAS", "TAG", "MORPH", "SENT", "WORD"]
         print("\t".join(header))
     tpl = "\t".join((
         "{:d}",
@@ -305,10 +303,7 @@ def get_token_conllu(token, i):
         lines = [id_, token.text, "_", "_", "_", "_", "_", "_", "_", "_"]
     else:
         lines = []
-    if token.head.i == token.i:
-        head = 0
-    else:
-        head = i + (token.head.i - token.i) + 1
+    head = 0 if token.head.i == token.i else i + (token.head.i - token.i) + 1
     features = list(token.morph)
     feat_str = []
     replacements = {"one": "1", "two": "2", "three": "3"}
@@ -316,11 +311,8 @@ def get_token_conllu(token, i):
         if not feat.startswith("begin") and not feat.startswith("end"):
             key, value = feat.split("_", 1)
             value = replacements.get(value, value)
-            feat_str.append("%s=%s" % (key, value.title()))
-    if not feat_str:
-        feat_str = "_"
-    else:
-        feat_str = "|".join(feat_str)
+            feat_str.append(f"{key}={value.title()}")
+    feat_str = "|".join(feat_str) if feat_str else "_"
     fields = [str(i+1), token.text, token.lemma_, token.pos_, token.tag_, feat_str,
               str(head), token.dep_.lower(), "_", "_"]
     lines.append("\t".join(fields))

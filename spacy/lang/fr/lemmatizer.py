@@ -48,13 +48,12 @@ class FrenchLemmatizer(Lemmatizer):
         index_table = self.lookups.get_table("lemma_index", {})
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
-        lemmas = self.lemmatize(
+        return self.lemmatize(
             string,
             index_table.get(univ_pos, {}),
             exc_table.get(univ_pos, {}),
             rules_table.get(univ_pos, []),
         )
-        return lemmas
 
     def noun(self, string, morphology=None):
         return self(string, "noun", morphology)

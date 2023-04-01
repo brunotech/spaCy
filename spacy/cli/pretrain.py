@@ -129,7 +129,7 @@ def pretrain(
     msg.info("Using GPU" if has_gpu else "Not using GPU")
 
     output_dir = Path(output_dir)
-    if output_dir.exists() and [p for p in output_dir.iterdir()]:
+    if output_dir.exists() and list(output_dir.iterdir()):
         msg.warn(
             "Output directory is not empty",
             "It is better to use an empty directory or refer to a new output path, "
@@ -159,7 +159,7 @@ def pretrain(
     with msg.loading("Loading model '{}'...".format(vectors_model)):
         nlp = util.load_model(vectors_model)
     msg.good("Loaded model '{}'".format(vectors_model))
-    pretrained_vectors = None if not use_vectors else nlp.vocab.vectors.name
+    pretrained_vectors = nlp.vocab.vectors.name if use_vectors else None
     model = create_pretraining_model(
         nlp,
         Tok2Vec(
@@ -181,7 +181,7 @@ def pretrain(
         model_name = re.search(r"model\d+\.bin", str(init_tok2vec))
         if model_name:
             # Default weight file name so read epoch_start from it by cutting off 'model' and '.bin'
-            epoch_start = int(model_name.group(0)[5:][:-4]) + 1
+            epoch_start = int(model_name[0][5:][:-4]) + 1
         else:
             if not epoch_start:
                 msg.fail(
@@ -399,7 +399,6 @@ def _smart_round(figure, width=10, max_decimal=4):
     n_decimal = width - (n_digits + 1)
     if n_decimal <= 1:
         return str(int(figure))
-    else:
-        n_decimal = min(n_decimal, max_decimal)
-        format_str = "%." + str(n_decimal) + "f"
-        return format_str % figure
+    n_decimal = min(n_decimal, max_decimal)
+    format_str = f"%.{str(n_decimal)}f"
+    return format_str % figure

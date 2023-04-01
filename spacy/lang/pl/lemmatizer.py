@@ -18,7 +18,7 @@ class PolishLemmatizer(Lemmatizer):
         lookup_pos = univ_pos.lower()
         if univ_pos == "PROPN":
             lookup_pos = "noun"
-        lookup_table = self.lookups.get_table("lemma_lookup_" + lookup_pos, {})
+        lookup_table = self.lookups.get_table(f"lemma_lookup_{lookup_pos}", {})
 
         if univ_pos == "NOUN":
             return self.lemmatize_noun(string, morphology, lookup_table)

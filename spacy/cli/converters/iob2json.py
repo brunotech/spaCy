@@ -52,8 +52,7 @@ def read_iob(raw_sents):
         )
     sentences = [{"tokens": sent} for sent in sentences]
     paragraphs = [{"sentences": [sent]} for sent in sentences]
-    docs = [{"id": i, "paragraphs": [para]} for i, para in enumerate(paragraphs)]
-    return docs
+    return [{"id": i, "paragraphs": [para]} for i, para in enumerate(paragraphs)]
 
 
 def merge_sentences(docs, n_sents):

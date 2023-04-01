@@ -31,8 +31,7 @@ TRAIN_DATA = [
 def read_raw_data(nlp, jsonl_loc):
     for json_obj in srsly.read_jsonl(jsonl_loc):
         if json_obj["text"].strip():
-            doc = nlp.make_doc(json_obj["text"])
-            yield doc
+            yield nlp.make_doc(json_obj["text"])
 
 
 def read_gold_data(nlp, gold_loc):
@@ -67,11 +66,11 @@ def main(model_name, unlabelled_loc):
     pipe_exceptions = ["ner", "trf_wordpiecer", "trf_tok2vec"]
     other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
     sizes = compounding(1.0, 4.0, 1.001)
-    with nlp.disable_pipes(*other_pipes), warnings.catch_warnings():
+    with (nlp.disable_pipes(*other_pipes), warnings.catch_warnings()):
         # show warnings for misaligned entity spans once
         warnings.filterwarnings("once", category=UserWarning, module='spacy')
 
-        for itn in range(n_iter):
+        for _ in range(n_iter):
             random.shuffle(TRAIN_DATA)
             random.shuffle(raw_docs)
             losses = {}
@@ -88,7 +87,7 @@ def main(model_name, unlabelled_loc):
     print(nlp.get_pipe("ner").model.unseen_classes)
     test_text = "Do you like horses?"
     doc = nlp(test_text)
-    print("Entities in '%s'" % test_text)
+    print(f"Entities in '{test_text}'")
     for ent in doc.ents:
         print(ent.label_, ent.text)
 

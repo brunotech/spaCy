@@ -95,9 +95,7 @@ def like_num(text):
             return True
     if text.lower() in _num_words or text.lower().split(" ")[0] in _num_words:
         return True
-    if text in _num_words:
-        return True
-    return False
+    return text in _num_words
 
 
 LEX_ATTRS = {LIKE_NUM: like_num}

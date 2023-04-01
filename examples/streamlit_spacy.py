@@ -105,8 +105,7 @@ if "textcat" in nlp.pipe_names:
     st.dataframe(df)
 
 
-vector_size = nlp.meta.get("vectors", {}).get("width", 0)
-if vector_size:
+if vector_size := nlp.meta.get("vectors", {}).get("width", 0):
     st.header("Vectors & Similarity")
     st.code(nlp.meta["vectors"])
     text1 = st.text_input("Text or word 1", "apple")

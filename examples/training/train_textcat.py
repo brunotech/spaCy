@@ -34,7 +34,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
 
     if model is not None:
         nlp = spacy.load(model)  # load existing spaCy model
-        print("Loaded model '%s'" % model)
+        print(f"Loaded model '{model}'")
     else:
         nlp = spacy.blank("en")  # create blank Language class
         print("Created blank 'en' model")
@@ -60,9 +60,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
     train_texts = train_texts[:n_texts]
     train_cats = train_cats[:n_texts]
     print(
-        "Using {} examples ({} training, {} evaluation)".format(
-            n_texts, len(train_texts), len(dev_texts)
-        )
+        f"Using {n_texts} examples ({len(train_texts)} training, {len(dev_texts)} evaluation)"
     )
     train_data = list(zip(train_texts, [{"cats": cats} for cats in train_cats]))
 
@@ -77,7 +75,7 @@ def main(model=None, output_dir=None, n_iter=20, n_texts=2000, init_tok2vec=None
         print("Training the model...")
         print("{:^5}\t{:^5}\t{:^5}\t{:^5}".format("LOSS", "P", "R", "F"))
         batch_sizes = compounding(4.0, 32.0, 1.001)
-        for i in range(n_iter):
+        for _ in range(n_iter):
             losses = {}
             # batch up the examples using spaCy's minibatch
             random.shuffle(train_data)
@@ -141,11 +139,11 @@ def evaluate(tokenizer, textcat, texts, cats):
                 continue
             if score >= 0.5 and gold[label] >= 0.5:
                 tp += 1.0
-            elif score >= 0.5 and gold[label] < 0.5:
+            elif score >= 0.5:
                 fp += 1.0
-            elif score < 0.5 and gold[label] < 0.5:
+            elif gold[label] < 0.5:
                 tn += 1
-            elif score < 0.5 and gold[label] >= 0.5:
+            else:
                 fn += 1
     precision = tp / (tp + fp)
     recall = tp / (tp + fn)

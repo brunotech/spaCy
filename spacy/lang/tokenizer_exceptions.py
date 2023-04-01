@@ -59,24 +59,21 @@ URL_PATTERN = (
 ).strip()
 
 TOKEN_MATCH = None
-URL_MATCH = re.compile("(?u)" + URL_PATTERN).match
+URL_MATCH = re.compile(f"(?u){URL_PATTERN}").match
 
 
-BASE_EXCEPTIONS = {}
-
-
-for exc_data in [
-    {ORTH: " ", POS: SPACE, TAG: "_SP"},
-    {ORTH: "\t", POS: SPACE, TAG: "_SP"},
-    {ORTH: "\\t", POS: SPACE, TAG: "_SP"},
-    {ORTH: "\n", POS: SPACE, TAG: "_SP"},
-    {ORTH: "\\n", POS: SPACE, TAG: "_SP"},
-    {ORTH: "\u2014"},
-    {ORTH: "\u00a0", POS: SPACE, LEMMA: "  ", TAG: "_SP"},
-]:
-    BASE_EXCEPTIONS[exc_data[ORTH]] = [exc_data]
-
-
+BASE_EXCEPTIONS = {
+    exc_data[ORTH]: [exc_data]
+    for exc_data in [
+        {ORTH: " ", POS: SPACE, TAG: "_SP"},
+        {ORTH: "\t", POS: SPACE, TAG: "_SP"},
+        {ORTH: "\\t", POS: SPACE, TAG: "_SP"},
+        {ORTH: "\n", POS: SPACE, TAG: "_SP"},
+        {ORTH: "\\n", POS: SPACE, TAG: "_SP"},
+        {ORTH: "\u2014"},
+        {ORTH: "\u00a0", POS: SPACE, LEMMA: "  ", TAG: "_SP"},
+    ]
+}
 for orth in [
     "'",
     '\\")',

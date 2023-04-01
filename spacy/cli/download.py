@@ -50,7 +50,7 @@ def download(model, direct=False, *pip_args):
             sys.exit(dl)
         msg.good(
             "Download and installation successful",
-            "You can now load the model via spacy.load('{}')".format(model_name),
+            f"You can now load the model via spacy.load('{model_name}')",
         )
         # Only create symlink if the model is installed via a shortcut like 'en'.
         # There's no real advantage over an additional symlink for en_core_web_sm
@@ -69,10 +69,7 @@ def download(model, direct=False, *pip_args):
                 # message and loading instructions, even if linking fails.
                 msg.warn(
                     "Download successful but linking failed",
-                    "Creating a shortcut link for '{}' didn't work (maybe you "
-                    "don't have admin permissions?), but you can still load "
-                    "the model via its full package name: "
-                    "nlp = spacy.load('{}')".format(model, model_name),
+                    f"Creating a shortcut link for '{model}' didn't work (maybe you don't have admin permissions?), but you can still load the model via its full package name: nlp = spacy.load('{model_name}')",
                 )
         # If a model is downloaded and then loaded within the same process, our
         # is_package check currently fails, because pkg_resources.working_set
@@ -95,11 +92,8 @@ def get_json(url, desc):
     r = requests.get(url)
     if r.status_code != 200:
         msg.fail(
-            "Server error ({})".format(r.status_code),
-            "Couldn't fetch {}. Please find a model for your spaCy "
-            "installation (v{}), and download it manually. For more "
-            "details, see the documentation: "
-            "https://spacy.io/usage/models".format(desc, about.__version__),
+            f"Server error ({r.status_code})",
+            f"Couldn't fetch {desc}. Please find a model for your spaCy installation (v{about.__version__}), and download it manually. For more details, see the documentation: https://spacy.io/usage/models",
             exits=1,
         )
     return r.json()
@@ -111,7 +105,7 @@ def get_compatibility():
     comp_table = get_json(about.__compatibility__, "compatibility table")
     comp = comp_table["spacy"]
     if version not in comp:
-        msg.fail("No compatible models found for v{} of spaCy".format(version), exits=1)
+        msg.fail(f"No compatible models found for v{version} of spaCy", exits=1)
     return comp[version]
 
 
@@ -119,15 +113,14 @@ def get_version(model, comp):
     model = model.rsplit(".dev", 1)[0]
     if model not in comp:
         msg.fail(
-            "No compatible model found for '{}' "
-            "(spaCy v{}).".format(model, about.__version__),
+            f"No compatible model found for '{model}' (spaCy v{about.__version__}).",
             exits=1,
         )
     return comp[model][0]
 
 
 def download_model(filename, user_pip_args=None):
-    download_url = about.__download_url__ + "/" + filename
+    download_url = f"{about.__download_url__}/{filename}"
     pip_args = ["--no-cache-dir"]
     if user_pip_args:
         pip_args.extend(user_pip_args)

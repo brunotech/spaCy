@@ -33,8 +33,7 @@ def iter_dir(loc):
     dir_path = Path(loc)
     for fn_path in dir_path.iterdir():
         if fn_path.is_dir():
-            for sub_path in fn_path.iterdir():
-                yield sub_path
+            yield from fn_path.iterdir()
         else:
             yield fn_path
 

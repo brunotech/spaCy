@@ -28,7 +28,7 @@ import spacy
 @plac.annotations(model=("Model to load", "positional", None, str))
 def main(model="en_core_web_sm"):
     nlp = spacy.load(model)
-    print("Loaded model '%s'" % model)
+    print(f"Loaded model '{model}'")
 
     doc = nlp(
         "displaCy uses CSS and JavaScript to show you how computers "

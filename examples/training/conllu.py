@@ -35,10 +35,7 @@ numpy.random.seed(0)
 
 def minibatch_by_words(items, size=5000):
     random.shuffle(items)
-    if isinstance(size, int):
-        size_ = itertools.repeat(size)
-    else:
-        size_ = size
+    size_ = itertools.repeat(size) if isinstance(size, int) else size
     items = iter(items)
     while True:
         batch_size = next(size_)
@@ -90,7 +87,7 @@ def read_data(
     # cs is conllu sent, ct is conllu token
     docs = []
     golds = []
-    for doc_id, (text, cd) in enumerate(zip(paragraphs, conllu)):
+    for text, cd in zip(paragraphs, conllu):
         sent_annots = []
         for cs in cd:
             sent = defaultdict(list)
@@ -240,8 +237,8 @@ def print_progress(itn, losses, ud_scores):
         "uas": ud_scores["UAS"].f1 * 100,
         "las": ud_scores["LAS"].f1 * 100,
     }
-    header = ["Epoch", "Loss", "LAS", "UAS", "TAG", "SENT", "WORD"]
     if itn == 0:
+        header = ["Epoch", "Loss", "LAS", "UAS", "TAG", "SENT", "WORD"]
         print("\t".join(header))
     tpl = "\t".join(
         (
@@ -270,10 +267,7 @@ def get_token_conllu(token, i):
         lines = [id_, token.text, "_", "_", "_", "_", "_", "_", "_", "_"]
     else:
         lines = []
-    if token.head.i == token.i:
-        head = 0
-    else:
-        head = i + (token.head.i - token.i) + 1
+    head = 0 if token.head.i == token.i else i + (token.head.i - token.i) + 1
     fields = [
         str(i + 1),
         token.text,
@@ -317,7 +311,7 @@ def initialize_pipeline(nlp, docs, golds, config):
                 nlp.tagger.add_label(tag)
     # Replace labels that didn't make the frequency cutoff
     actions = set(nlp.parser.labels)
-    label_set = set([act.split("-")[1] for act in actions if "-" in act])
+    label_set = {act.split("-")[1] for act in actions if "-" in act}
     for gold in golds:
         for i, label in enumerate(gold.labels):
             if label is not None and label not in label_set:

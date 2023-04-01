@@ -79,14 +79,10 @@ class DutchLemmatizer(Lemmatizer):
         if forms:
             if is_known:
                 return forms
-            else:
-                for form in forms:
-                    if form in exceptions:
-                        return [form]
-            if looked_up_lemma:
-                return [looked_up_lemma]
-            else:
-                return forms
+            for form in forms:
+                if form in exceptions:
+                    return [form]
+            return [looked_up_lemma] if looked_up_lemma else forms
         elif looked_up_lemma:
             return [looked_up_lemma]
         else:

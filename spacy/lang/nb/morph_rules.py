@@ -663,6 +663,6 @@ MORPH_RULES = {
 }
 
 # copied from the English morph_rules.py
-for tag, rules in MORPH_RULES.items():
+for rules in MORPH_RULES.values():
     for key, attrs in dict(rules).items():
         rules[key.title()] = attrs

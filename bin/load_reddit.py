@@ -31,11 +31,8 @@ class Reddit(object):
         self.meta = meta_keys
         file_path = Path(file_path)
         if not file_path.exists():
-            raise IOError("Can't find file path: {}".format(file_path))
-        if not file_path.is_dir():
-            self.files = [file_path]
-        else:
-            self.files = list(file_path.iterdir())
+            raise IOError(f"Can't find file path: {file_path}")
+        self.files = list(file_path.iterdir()) if file_path.is_dir() else [file_path]
 
     def __iter__(self):
         for file_path in self.iter_files():
@@ -53,8 +50,7 @@ class Reddit(object):
         return {name: item.get(key, "n/a") for key, name in self.meta.items()}
 
     def iter_files(self):
-        for file_path in self.files:
-            yield file_path
+        yield from self.files
 
     def strip_tags(self, text):
         text = self.link_re.sub(r"\1", text)

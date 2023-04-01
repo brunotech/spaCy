@@ -30,7 +30,7 @@ from spacy.util import minibatch
 )
 def main(output_dir, model="en_core_web_sm", n_jobs=4, batch_size=1000, limit=10000):
     nlp = spacy.load(model)  # load spaCy model
-    print("Loaded model '%s'" % model)
+    print(f"Loaded model '{model}'")
     if not output_dir.exists():
         output_dir.mkdir()
     # load and pre-process the IMBD dataset
@@ -55,7 +55,7 @@ def transform_texts(nlp, batch_id, texts, output_dir):
         for doc in nlp.pipe(texts):
             f.write(" ".join(represent_word(w) for w in doc if not w.is_space))
             f.write("\n")
-    print("Saved {} texts to {}.txt".format(len(texts), batch_id))
+    print(f"Saved {len(texts)} texts to {batch_id}.txt")
 
 
 def represent_word(word):
@@ -68,7 +68,7 @@ def represent_word(word):
         and word.prob < word.doc.vocab[text.lower()].prob
     ):
         text = text.lower()
-    return text + "|" + word.tag_
+    return f"{text}|{word.tag_}"
 
 
 def is_sent_begin(word):

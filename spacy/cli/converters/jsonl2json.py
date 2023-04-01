@@ -18,10 +18,7 @@ def ner_jsonl2json(input_data, lang=None, n_sents=10, use_morphology=False, **_)
         docs = []
         for record in batch:
             raw_text = record["text"]
-            if "entities" in record:
-                ents = record["entities"]
-            else:
-                ents = record["spans"]
+            ents = record["entities"] if "entities" in record else record["spans"]
             ents = [(e["start"], e["end"], e["label"]) for e in ents]
             doc = nlp.make_doc(raw_text)
             sentencizer(doc)

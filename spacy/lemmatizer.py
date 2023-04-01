@@ -58,17 +58,13 @@ class Lemmatizer(object):
         exc_table = self.lookups.get_table("lemma_exc", {})
         rules_table = self.lookups.get_table("lemma_rules", {})
         if not any((index_table.get(univ_pos), exc_table.get(univ_pos), rules_table.get(univ_pos))):
-            if univ_pos == "propn":
-                return [string]
-            else:
-                return [string.lower()]
-        lemmas = self.lemmatize(
+            return [string] if univ_pos == "propn" else [string.lower()]
+        return self.lemmatize(
             string,
             index_table.get(univ_pos, {}),
             exc_table.get(univ_pos, {}),
             rules_table.get(univ_pos, []),
         )
-        return lemmas
 
     def noun(self, string, morphology=None):
         return self(string, "noun", morphology)
@@ -106,9 +102,7 @@ class Lemmatizer(object):
         """
         lookup_table = self.lookups.get_table("lemma_lookup", {})
         key = orth if orth is not None else string
-        if key in lookup_table:
-            return lookup_table[key]
-        return string
+        return lookup_table[key] if key in lookup_table else string
 
     def lemmatize(self, string, index, exceptions, rules):
         orig = string

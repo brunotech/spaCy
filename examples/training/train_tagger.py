@@ -59,7 +59,7 @@ def main(lang="en", output_dir=None, n_iter=25):
     nlp.add_pipe(tagger)
 
     optimizer = nlp.begin_training()
-    for i in range(n_iter):
+    for _ in range(n_iter):
         random.shuffle(TRAIN_DATA)
         losses = {}
         # batch up the examples using spaCy's minibatch
